@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>.container{max-width:1320px;margin:0 auto;padding:0 24px;}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}@media(max-width:576px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}</style>
+<title>Teachers - EduManage Pro</title>
+</head>
+<body>
+<header class="pub-navbar"><div class="container" style="display:flex;align-items:center;height:70px;gap:20px;"><a href="index.html" class="logo"><div class="logo-icon"><i class="bi bi-book-half"></i></div><div><h6 style="font-family:Outfit,sans-serif;">EduManage <span style="color:var(--primary)">Pro</span></h6><span>Coaching Management</span></div></a><nav class="pub-nav-links" id="pubNavLinks"><a href="index.html">Home</a><a href="about.html">About</a><a href="courses.html">Courses</a><a href="teachers.html" class="active">Teachers</a><a href="results.html">Results</a><a href="notice.html">Notice</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></nav><div class="pub-nav-actions"><a href="student-dashboard.html" class="btn btn-outline btn-sm"><i class="bi bi-person"></i> Student</a><a href="parent-dashboard.html" class="btn btn-outline btn-sm"><i class="bi bi-people"></i> Parent</a><a href="admin-dashboard.html" class="btn btn-primary btn-sm"><i class="bi bi-shield-lock"></i> Admin</a></div><button class="pub-hamburger" onclick="document.getElementById('pubNavLinks').classList.toggle('open')"><i class="bi bi-list"></i></button></div></header>
+<div class="page-banner"><div class="container"><h1>Our Expert Teachers</h1><p>Meet the dedicated faculty driving student success</p><div class="breadcrumb"><a href="index.html">Home</a><span>/</span><span>Teachers</span></div></div></div>
+
+<section class="section-padding">
+  <div class="container">
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:32px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+      <div class="input-icon-wrap" style="flex:1;min-width:200px;"><i class="bi bi-search input-icon"></i><input type="text" class="form-control" placeholder="Search teachers..."></div>
+      <select class="form-select" style="width:160px;"><option>All Subjects</option><option>Physics</option><option>Math</option><option>Chemistry</option></select>
+      <button class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+      <div class="teacher-card">
+        <div class="teacher-img-wrap"><img src="images/teacher_female_1_1790497081063.jpg" alt="Nasrin Sultana"></div>
+        <div class="card-body">
+          <h5>Nasrin Sultana</h5><div class="subject">Bangladesh Studies & History</div><div class="qual">M.A. History, University of Dhaka</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
+            <span><i class="bi bi-people" style="color:var(--primary);"></i> 85</span>
+            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.9</span>
+            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 12 Yrs</span>
+          </div>
+          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
+        </div>
+      </div><div class="teacher-card">
+        <div class="teacher-img-wrap"><img src="images/teacher_male_1_1790497096029.jpg" alt="Md. Rafiqul Islam"></div>
+        <div class="card-body">
+          <h5>Md. Rafiqul Islam</h5><div class="subject">Physics & Mathematics</div><div class="qual">M.Sc. Physics, BUET</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
+            <span><i class="bi bi-people" style="color:var(--primary);"></i> 120</span>
+            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.8</span>
+            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 8 Yrs</span>
+          </div>
+          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
+        </div>
+      </div><div class="teacher-card">
+        <div class="teacher-img-wrap"><img src="images/teacher_male_2_1790497121228.jpg" alt="Prof. Abdul Karim"></div>
+        <div class="card-body">
+          <h5>Prof. Abdul Karim</h5><div class="subject">Higher Mathematics</div><div class="qual">Ph.D. Mathematics, DU</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
+            <span><i class="bi bi-people" style="color:var(--primary);"></i> 200</span>
+            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 5.0</span>
+            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 18 Yrs</span>
+          </div>
+          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
+        </div>
+      </div><div class="teacher-card">
+        <div class="teacher-img-wrap"><img src="images/teacher_female_2_1790497140028.jpg" alt="Farhana Akter"></div>
+        <div class="card-body">
+          <h5>Farhana Akter</h5><div class="subject">Chemistry & Biology</div><div class="qual">M.Sc. Chemistry, RU</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
+            <span><i class="bi bi-people" style="color:var(--primary);"></i> 95</span>
+            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.9</span>
+            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 6 Yrs</span>
+          </div>
+          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
+        </div>
+      </div><div class="teacher-card">
+        <div class="teacher-img-wrap"><img src="images/teacher_male_1_1790497096029.jpg" alt="Sohel Rana"></div>
+        <div class="card-body">
+          <h5>Sohel Rana</h5><div class="subject">English Language</div><div class="qual">M.A. English Literature, DU</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
+            <span><i class="bi bi-people" style="color:var(--primary);"></i> 75</span>
+            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.7</span>
+            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 5 Yrs</span>
+          </div>
+          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
+        </div>
+      </div><div class="teacher-card">
+        <div class="teacher-img-wrap"><img src="images/teacher_female_1_1790497081063.jpg" alt="Tahmina Khanam"></div>
+        <div class="card-body">
+          <h5>Tahmina Khanam</h5><div class="subject">Accounting & Commerce</div><div class="qual">M.Com, Chittagong University</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
+            <span><i class="bi bi-people" style="color:var(--primary);"></i> 60</span>
+            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.8</span>
+            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 9 Yrs</span>
+          </div>
+          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section"><div class="container"><h2 style="margin-bottom:14px;">Join Our Faculty Team</h2><p>We are always looking for passionate educators to join EduManage Pro.</p><div class="cta-actions"><a href="contact.html" class="btn btn-white btn-lg"><i class="bi bi-person-plus"></i> Apply Now</a></div></div></section>
+<footer class="site-footer"><div class="container" style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:40px;"><div class="footer-brand"><div class="logo-icon"><i class="bi bi-book-half"></i></div><h4>EduManage <span style="color:var(--primary)">Pro</span></h4><p>Bangladesh's comprehensive coaching management system.</p><div class="social-links"><a class="social-link" href="#"><i class="bi bi-facebook"></i></a><a class="social-link" href="#"><i class="bi bi-twitter-x"></i></a><a class="social-link" href="#"><i class="bi bi-youtube"></i></a><a class="social-link" href="#"><i class="bi bi-linkedin"></i></a></div></div><div><div class="footer-heading">Quick Links</div><ul class="footer-links"><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="courses.html">Courses</a></li><li><a href="teachers.html">Teachers</a></li><li><a href="results.html">Results</a></li><li><a href="notice.html">Notices</a></li></ul></div><div><div class="footer-heading">Portals</div><ul class="footer-links"><li><a href="admin-dashboard.html">Admin Panel</a></li><li><a href="student-dashboard.html">Student Portal</a></li><li><a href="parent-dashboard.html">Parent Portal</a></li><li><a href="attendance.html">Attendance</a></li></ul></div><div><div class="footer-heading">Contact</div><div class="footer-contact"><div class="contact-item"><i class="bi bi-geo-alt-fill"></i><span>House 12, Road 5, Dhanmondi, Dhaka-1205</span></div><div class="contact-item"><i class="bi bi-telephone-fill"></i><span>+880 1700-123456</span></div><div class="contact-item"><i class="bi bi-envelope-fill"></i><span>info@edumanagepro.com.bd</span></div></div></div></div><div class="footer-bottom"><div class="container">© 2026 EduManage Pro. All rights reserved.</div></div></footer></body></html>

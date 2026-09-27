@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>.container{max-width:1320px;margin:0 auto;padding:0 24px;}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}@media(max-width:576px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}</style>
+<title>Invoice - EduManage Pro</title>
+</head>
+<body>
+<div class="sidebar" id="sidebar" style="position:fixed;left:0;top:0;bottom:0;width:260px;background:#fff;border-right:1px solid var(--border);z-index:100;overflow-y:auto;box-shadow:2px 0 20px rgba(0,0,0,.05);">
+  <div class="sidebar-brand"><div class="logo-icon"><i class="bi bi-book-half"></i></div><div class="brand-text"><h6>EduManage Pro</h6><span>Admin Panel</span></div></div>
+  <nav class="sidebar-nav"><a href="admin-dashboard.html" class="nav-item""><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="student-management.html" class="nav-item""><i class="bi bi-person-vcard"></i> Students</a>
+<a href="teacher-management.html" class="nav-item""><i class="bi bi-person-badge"></i> Teachers</a>
+<a href="courses.html" class="nav-item""><i class="bi bi-journal-bookmark"></i> Courses</a>
+<a href="batch-management.html" class="nav-item""><i class="bi bi-collection"></i> Batches</a>
+<a href="attendance.html" class="nav-item""><i class="bi bi-calendar2-check"></i> Attendance</a>
+<a href="exam-management.html" class="nav-item""><i class="bi bi-file-earmark-text"></i> Exams</a>
+<a href="result-management.html" class="nav-item""><i class="bi bi-trophy"></i> Results</a>
+<a href="routine.html" class="nav-item""><i class="bi bi-clock-history"></i> Routine</a>
+<a href="fees-management.html" class="nav-item""><i class="bi bi-cash-coin"></i> Fees</a>
+<a href="invoice.html" class="nav-item active""><i class="bi bi-receipt"></i> Invoices</a>
+<a href="notice-management.html" class="nav-item""><i class="bi bi-megaphone"></i> Notices</a>
+<a href="sms.html" class="nav-item""><i class="bi bi-chat-dots"></i> SMS / Notify</a>
+<a href="reports.html" class="nav-item""><i class="bi bi-bar-chart"></i> Reports</a>
+<a href="settings.html" class="nav-item""><i class="bi bi-gear"></i> Settings</a><div style="margin-top:16px;padding:0 8px;"><a href="index.html" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"><i class="bi bi-box-arrow-left"></i> Back to Site</a></div></nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;"></div>
+<div class="main-content" style="margin-left:260px;">
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" style="display:none;"><i class="bi bi-list"></i></button>
+    <div class="topbar-search"><i class="bi bi-search"></i><input type="text" placeholder="Search..."></div>
+  </div>
+  <div class="topbar-right">
+    <div class="icon-btn"><i class="bi bi-bell"></i><span class="notif-dot"></span></div>
+    <div class="icon-btn"><i class="bi bi-envelope"></i></div>
+    <div class="topbar-user"><img src="images/teacher_male_2_1790497121228.jpg" alt="Admin"><div class="user-info"><strong>Abdul Karim</strong><span>Administrator</span></div></div>
+  </div>
+</div>
+<div class="breadcrumb-bar"><a href="admin-dashboard.html">Dashboard</a><i class="bi bi-chevron-right"></i><a href="fees-management.html">Fees</a><i class="bi bi-chevron-right"></i><span>Invoice</span></div>
+<div class="page-content">
+  <div class="page-header">
+    <div><h2>Payment Invoice</h2></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+      <button class="btn btn-primary btn-sm"><i class="bi bi-download"></i> Download PDF</button>
+    </div>
+  </div>
+
+  <div class="invoice-page">
+    <div class="invoice-header">
+      <div class="invoice-logo">
+        <div class="logo-icon" style="margin-bottom:10px;"><i class="bi bi-book-half"></i></div>
+        <h4 style="font-size:1.1rem;font-weight:700;">EduManage Pro</h4>
+        <p style="font-size:.8rem;color:var(--gray-500);">House 12, Road 5, Dhanmondi<br>Dhaka-1205, Bangladesh<br>+880 1700-123456</p>
+      </div>
+      <div class="invoice-number">
+        <span class="badge badge-success" style="font-size:.75rem;margin-bottom:10px;">PAID</span>
+        <h2 style="color:var(--primary);">#INV-2024-001</h2>
+        <p>Invoice Date: 01 Sep 2026</p>
+        <p>Due Date: 10 Sep 2026</p>
+      </div>
+    </div>
+
+    <div class="invoice-divider"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;">
+      <div>
+        <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);margin-bottom:8px;">Billed To</div>
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;"><img src="images/student_female_profile_1790497748277.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;"></div>
+        <strong style="display:block;font-size:1rem;">Fatima Begum</strong>
+        <p style="font-size:.85rem;margin:4px 0;">Student ID: #STD-2401</p>
+        <p style="font-size:.85rem;margin:4px 0;">Class X — SSC Batch A</p>
+        <p style="font-size:.85rem;margin:4px 0;">Guardian: Karim Hossain</p>
+        <p style="font-size:.85rem;margin:4px 0;">Phone: 01712-345678</p>
+      </div>
+      <div>
+        <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);margin-bottom:8px;">Payment Details</div>
+        <div style="background:var(--gray-50);border-radius:var(--radius-lg);padding:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:.85rem;color:var(--gray-600);">Payment Method</span><strong style="font-size:.85rem;">bKash</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:.85rem;color:var(--gray-600);">Transaction ID</span><strong style="font-size:.85rem;">TXN-BK-98765</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:.85rem;color:var(--gray-600);">Payment Date</span><strong style="font-size:.85rem;">01 Sep 2026</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="font-size:.85rem;color:var(--gray-600);">Received By</span><strong style="font-size:.85rem;">Admin Office</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <table class="data-table invoice-table" style="margin-bottom:24px;">
+      <thead><tr><th>#</th><th>Description</th><th>Period</th><th>Amount</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Monthly Tuition Fee — SSC Science Batch A</td><td>September 2026</td><td>৳2,500.00</td></tr>
+        <tr><td>2</td><td>Exam Fee — SSC Model Test</td><td>October 2026</td><td>৳200.00</td></tr>
+        <tr><td>3</td><td>Study Material Fee</td><td>One-time</td><td>৳300.00</td></tr>
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--gray-50);"><td colspan="3" style="text-align:right;font-weight:600;">Subtotal</td><td>৳3,000.00</td></tr>
+        <tr style="background:var(--gray-50);"><td colspan="3" style="text-align:right;font-weight:600;">Discount</td><td style="color:var(--success);">- ৳0.00</td></tr>
+        <tr class="invoice-total-row" style="background:var(--primary-light);"><td colspan="3" style="text-align:right;font-weight:700;color:var(--primary);">Total Paid</td><td style="color:var(--primary);font-weight:800;font-size:1.1rem;">৳3,000.00</td></tr>
+      </tfoot>
+    </table>
+
+    <div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> Payment received in full. Thank you!</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;">
+      <div class="signature-area"><p style="font-size:.78rem;color:var(--gray-500);">Student Signature</p></div>
+      <div class="signature-area"><p style="font-size:.78rem;color:var(--gray-500);">Authorized Signature &amp; Stamp</p></div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+function toggleSidebar(){
+  const s=document.getElementById('sidebar');
+  const o=document.getElementById('sidebarOverlay');
+  s.style.transform=s.style.transform==='translateX(0px)'||s.style.transform===''?'translateX(-100%)':'translateX(0px)';
+  if(window.innerWidth<=1024){s.classList.toggle('open');o.style.display=o.style.display==='none'?'block':'none';}
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').style.display='none';
+}
+function initResponsive(){
+  const toggle=document.querySelector('.sidebar-toggle');
+  if(window.innerWidth<=1024&&toggle)toggle.style.display='flex';
+  if(window.innerWidth<=1024){
+    const s=document.getElementById('sidebar');
+    if(s)s.style.transform='translateX(-100%)';
+  }
+}
+window.addEventListener('load',initResponsive);
+window.addEventListener('resize',initResponsive);
+</script>
+</body></html>

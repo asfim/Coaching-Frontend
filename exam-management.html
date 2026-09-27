@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>.container{max-width:1320px;margin:0 auto;padding:0 24px;}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}@media(max-width:576px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}</style>
+<title>EduManage Pro Admin</title>
+</head>
+<body>
+<style>body{overflow-x:hidden;}.main-content{margin-left:260px;display:flex;flex-direction:column;min-height:100vh;}@media(max-width:1024px){.main-content{margin-left:0;}}</style>
+<div class="sidebar" id="sidebar" style="position:fixed;left:0;top:0;bottom:0;width:260px;background:#fff;border-right:1px solid var(--border);z-index:100;overflow-y:auto;box-shadow:2px 0 20px rgba(0,0,0,.05);">
+  <div class="sidebar-brand"><div class="logo-icon"><i class="bi bi-book-half"></i></div><div class="brand-text"><h6>EduManage Pro</h6><span>Admin Panel</span></div></div>
+  <nav class="sidebar-nav"><a href="admin-dashboard.html" class="nav-item""><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="student-management.html" class="nav-item""><i class="bi bi-person-vcard"></i> Students</a>
+<a href="teacher-management.html" class="nav-item""><i class="bi bi-person-badge"></i> Teachers</a>
+<a href="courses.html" class="nav-item""><i class="bi bi-journal-bookmark"></i> Courses</a>
+<a href="batch-management.html" class="nav-item""><i class="bi bi-collection"></i> Batches</a>
+<a href="attendance.html" class="nav-item""><i class="bi bi-calendar2-check"></i> Attendance</a>
+<a href="exam-management.html" class="nav-item active""><i class="bi bi-file-earmark-text"></i> Exams</a>
+<a href="result-management.html" class="nav-item""><i class="bi bi-trophy"></i> Results</a>
+<a href="routine.html" class="nav-item""><i class="bi bi-clock-history"></i> Routine</a>
+<a href="fees-management.html" class="nav-item""><i class="bi bi-cash-coin"></i> Fees</a>
+<a href="invoice.html" class="nav-item""><i class="bi bi-receipt"></i> Invoices</a>
+<a href="notice-management.html" class="nav-item""><i class="bi bi-megaphone"></i> Notices</a>
+<a href="sms.html" class="nav-item""><i class="bi bi-chat-dots"></i> SMS / Notify</a>
+<a href="reports.html" class="nav-item""><i class="bi bi-bar-chart"></i> Reports</a>
+<a href="settings.html" class="nav-item""><i class="bi bi-gear"></i> Settings</a><div style="margin-top:16px;padding:0 8px;"><a href="index.html" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"><i class="bi bi-box-arrow-left"></i> Back to Site</a></div></nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;"></div>
+<div class="main-content">
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" style="display:none;"><i class="bi bi-list"></i></button>
+    <div class="topbar-search"><i class="bi bi-search"></i><input type="text" placeholder="Search..."></div>
+  </div>
+  <div class="topbar-right">
+    <div class="icon-btn"><i class="bi bi-bell"></i><span class="notif-dot"></span></div>
+    <div class="icon-btn"><i class="bi bi-envelope"></i></div>
+    <div class="topbar-user"><img src="images/teacher_male_2_1790497121228.jpg" alt="Admin"><div class="user-info"><strong>Abdul Karim</strong><span>Administrator</span></div></div>
+  </div>
+</div>
+<div class="breadcrumb-bar"><a href="admin-dashboard.html">Dashboard</a><i class="bi bi-chevron-right"></i><span>exam management</span></div>
+<div class="page-content">
+
+<div class="page-header"><div><h2>Exam Management</h2><p>Schedule and manage all examinations</p></div>
+<button class="btn btn-primary"><i class="bi bi-plus-circle"></i> Schedule Exam</button></div>
+
+<!-- Tabs -->
+<div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
+  <button class="btn btn-primary btn-sm">All Exams</button>
+  <button class="btn btn-outline btn-sm" style="border-color:var(--warning);color:var(--warning);">Upcoming (3)</button>
+  <button class="btn btn-outline btn-sm" style="border-color:var(--success);color:var(--success);">Running (1)</button>
+  <button class="btn btn-outline btn-sm">Completed (12)</button>
+</div>
+
+<!-- Summary Cards -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;">
+  <div class="stat-card yellow"><div class="stat-icon yellow"><i class="bi bi-hourglass-split"></i></div><div class="stat-content"><h3>3</h3><p>Upcoming</p></div></div>
+  <div class="stat-card green"><div class="stat-icon green"><i class="bi bi-play-circle-fill"></i></div><div class="stat-content"><h3>1</h3><p>Running</p></div></div>
+  <div class="stat-card blue"><div class="stat-icon blue"><i class="bi bi-check-circle-fill"></i></div><div class="stat-content"><h3>12</h3><p>Completed</p></div></div>
+  <div class="stat-card purple"><div class="stat-icon purple"><i class="bi bi-people-fill"></i></div><div class="stat-content"><h3>4,820</h3><p>Participants</p></div></div>
+</div>
+
+<!-- Running Exam Alert -->
+<div class="alert alert-success" style="margin-bottom:16px;"><i class="bi bi-play-circle-fill"></i> <strong>SSC Model Test</strong> is currently running — Exam Hall A — Started 9:00 AM &nbsp; <button class="btn btn-success btn-sm" style="margin-left:8px;">Mark Attendance</button></div>
+
+<!-- Exam Table -->
+<div class="table-wrapper">
+  <table class="data-table">
+    <thead><tr><th>Exam Name</th><th>Class/Batch</th><th>Subjects</th><th>Date</th><th>Time</th><th>Duration</th><th>Total Marks</th><th>Participants</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SSC Model Test</strong></td><td>Class X / SSC-A</td><td>All Subjects</td><td>27 Sep 2026</td><td>9:00 AM</td><td>3 hrs</td><td>600</td><td>85</td><td><span class="badge badge-success" style="animation:pulse 2s infinite;">Running</span></td><td><div class="action-btns"><button class="btn btn-primary btn-sm">Marks Entry</button><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-eye"></i></button></div></td></tr>
+      <tr><td><strong>Monthly Test — Oct</strong></td><td>Class XI / HSC-A</td><td>Physics, Math</td><td>05 Oct 2026</td><td>2:00 PM</td><td>2 hrs</td><td>200</td><td>120</td><td><span class="badge badge-warning">Upcoming</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-trash"></i></button></div></td></tr>
+      <tr><td><strong>HSC Pre-Test</strong></td><td>Class XII / HSC-B</td><td>All Subjects</td><td>15 Oct 2026</td><td>9:00 AM</td><td>3 hrs</td><td>600</td><td>65</td><td><span class="badge badge-warning">Upcoming</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-trash"></i></button></div></td></tr>
+      <tr><td><strong>SSC Trial Exam</strong></td><td>Class X / SSC-B</td><td>All Subjects</td><td>01 Sep 2026</td><td>9:00 AM</td><td>3 hrs</td><td>600</td><td>80</td><td><span class="badge badge-gray">Completed</span></td><td><div class="action-btns"><button class="btn btn-success btn-sm">Publish Result</button><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-eye"></i></button></div></td></tr>
+      <tr><td><strong>Monthly Test — Sep</strong></td><td>Class IX / SSC-C</td><td>Math, Science</td><td>15 Sep 2026</td><td>2:00 PM</td><td>2 hrs</td><td>200</td><td>70</td><td><span class="badge badge-primary">Result Published</span></td><td><div class="action-btns"><button class="btn btn-primary btn-sm">View Result</button></div></td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+</div>
+
+<script>
+function toggleSidebar(){
+  const s=document.getElementById('sidebar');
+  const o=document.getElementById('sidebarOverlay');
+  s.style.transform=s.style.transform==='translateX(0px)'||s.style.transform===''?'translateX(-100%)':'translateX(0px)';
+  if(window.innerWidth<=1024){s.classList.toggle('open');o.style.display=o.style.display==='none'?'block':'none';}
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').style.display='none';
+}
+function initResponsive(){
+  const toggle=document.querySelector('.sidebar-toggle');
+  if(window.innerWidth<=1024&&toggle)toggle.style.display='flex';
+  if(window.innerWidth<=1024){
+    const s=document.getElementById('sidebar');
+    if(s)s.style.transform='translateX(-100%)';
+  }
+}
+window.addEventListener('load',initResponsive);
+window.addEventListener('resize',initResponsive);
+</script>
+</body>
+</html>
