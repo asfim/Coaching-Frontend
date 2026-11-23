@@ -67,8 +67,13 @@
       <h4 style="margin:0;font-weight:700;"><i class="bi bi-plus-circle" style="color:var(--primary);"></i> Add Course</h4>
       <button onclick="document.getElementById('addCourseModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <form action="{{ route('admin.courses.store') }}" method="POST">
+    <form action="{{ route('admin.courses.store') }}" method="POST" enctype="multipart/form-data">
       @csrf
+      <div style="margin-bottom:14px;background:var(--gray-50);padding:12px;border-radius:var(--radius);border:1px dashed var(--gray-300);">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;"><i class="bi bi-image" style="color:var(--primary);"></i> Course Cover Image</label>
+        <input type="file" name="image" class="form-control" accept="image/*">
+        <span style="font-size:0.72rem;color:var(--gray-500);display:block;margin-top:2px;">PNG, JPG, WEBP (Max 5MB). Optional.</span>
+      </div>
       <div style="margin-bottom:14px;">
         <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Course Title *</label>
         <input type="text" name="title" class="form-control" placeholder="e.g. SSC Science Complete Batch 2026" required>
@@ -131,9 +136,14 @@
       <h4 style="margin:0;font-weight:700;"><i class="bi bi-pencil-square" style="color:var(--primary);"></i> Edit Course</h4>
       <button onclick="document.getElementById('editCourseModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <form id="editCourseForm" method="POST">
+    <form id="editCourseForm" method="POST" enctype="multipart/form-data">
       @csrf
       @method('PUT')
+      <div style="margin-bottom:14px;background:var(--gray-50);padding:12px;border-radius:var(--radius);border:1px dashed var(--gray-300);">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;"><i class="bi bi-image" style="color:var(--primary);"></i> Change Cover Image</label>
+        <input type="file" name="image" class="form-control" accept="image/*">
+        <span style="font-size:0.72rem;color:var(--gray-500);display:block;margin-top:2px;">Leave blank to keep existing image.</span>
+      </div>
       <div style="margin-bottom:14px;">
         <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Course Title *</label>
         <input type="text" name="title" id="editCourseTitle" class="form-control" required>

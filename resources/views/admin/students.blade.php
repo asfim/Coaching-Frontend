@@ -101,10 +101,7 @@
           <div class="avatar-cell">
             <img src="{{ asset($st->avatar ?: 'images/student_female_profile_1790497748277.jpg') }}" alt="{{ $st->name }}">
             <div>
-              <strong>{{ $st->name }}</strong>
-              @if($st->email)
-                <div style="font-size:0.75rem;color:var(--gray-500);">{{ $st->email }}</div>
-              @endif
+           
             </div>
           </div>
         </td>
@@ -167,13 +164,30 @@
 
 <!-- Add Student Modal -->
 <div id="addStudentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:620px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;max-height:90vh;overflow-y:auto;">
+  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <h4 style="margin:0;font-weight:700;"><i class="bi bi-person-plus-fill" style="color:var(--primary);"></i> Add New Student</h4>
       <button onclick="document.getElementById('addStudentModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <form action="{{ route('admin.students.store') }}" method="POST">
+    <form action="{{ route('admin.students.store') }}" method="POST" enctype="multipart/form-data">
       @csrf
+
+      <!-- Avatar Upload with Preview -->
+      <div style="margin-bottom:16px;background:var(--gray-50);padding:12px 14px;border-radius:var(--radius);border:1px dashed var(--gray-300);">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:6px;color:var(--gray-700);">
+          <i class="bi bi-camera-fill" style="color:var(--primary);"></i> Student Photo / Avatar
+        </label>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:54px;height:54px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--primary-light);flex-shrink:0;">
+            <img id="addAvatarPreview" src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="flex:1;">
+            <input type="file" name="avatar" class="form-control" accept="image/*" onchange="previewAvatar(this, 'addAvatarPreview')">
+            <span style="font-size:0.72rem;color:var(--gray-500);display:block;margin-top:2px;">JPG, PNG, WEBP allowed (Max: 5MB). Optional.</span>
+          </div>
+        </div>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Full Name *</label>
@@ -227,7 +241,7 @@
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Batch</label>
           <select name="batch_id" class="form-select">
-            <option value="">Select Batch</option>
+            <option value="">Select Batch (Optional)</option>
             @foreach($batches as $b)
               <option value="{{ $b->id }}">{{ $b->name }} ({{ $b->batch_code }})</option>
             @endforeach
@@ -239,12 +253,19 @@
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Course</label>
           <select name="course_id" class="form-select">
-            <option value="">Select Course</option>
+            <option value="">Select Course (Optional)</option>
             @foreach($courses as $c)
               <option value="{{ $c->id }}">{{ $c->title }}</option>
             @endforeach
           </select>
         </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Admission Date</label>
+          <input type="date" name="admission_date" class="form-control" value="{{ date('Y-m-d') }}">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Status *</label>
           <select name="status" class="form-select" required>
@@ -252,14 +273,13 @@
             <option value="Inactive">Inactive</option>
           </select>
         </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
+          <input type="text" name="address" class="form-control" placeholder="Residential address">
+        </div>
       </div>
 
-      <div style="margin-bottom:18px;">
-        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
-        <textarea name="address" class="form-control" rows="2" placeholder="Residential address"></textarea>
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;">
         <button type="button" class="btn btn-outline" onclick="document.getElementById('addStudentModal').style.display='none'">Cancel</button>
         <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Student</button>
       </div>
@@ -269,14 +289,31 @@
 
 <!-- Edit Student Modal -->
 <div id="editStudentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:620px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;max-height:90vh;overflow-y:auto;">
+  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <h4 style="margin:0;font-weight:700;"><i class="bi bi-pencil-square" style="color:var(--primary);"></i> Edit Student</h4>
       <button onclick="document.getElementById('editStudentModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <form id="editStudentForm" method="POST">
+    <form id="editStudentForm" method="POST" enctype="multipart/form-data">
       @csrf
       @method('PUT')
+
+      <!-- Avatar Change with Preview -->
+      <div style="margin-bottom:16px;background:var(--gray-50);padding:12px 14px;border-radius:var(--radius);border:1px dashed var(--gray-300);">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:6px;color:var(--gray-700);">
+          <i class="bi bi-camera-fill" style="color:var(--primary);"></i> Change Student Photo
+        </label>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:54px;height:54px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--primary-light);flex-shrink:0;">
+            <img id="editAvatarPreview" src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="flex:1;">
+            <input type="file" name="avatar" class="form-control" accept="image/*" onchange="previewAvatar(this, 'editAvatarPreview')">
+            <span style="font-size:0.72rem;color:var(--gray-500);display:block;margin-top:2px;">Leave empty to keep existing photo.</span>
+          </div>
+        </div>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Full Name *</label>
@@ -320,7 +357,7 @@
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Batch</label>
           <select name="batch_id" id="editStudentBatch" class="form-select">
-            <option value="">Select Batch</option>
+            <option value="">Select Batch (Optional)</option>
             @foreach($batches as $b)
               <option value="{{ $b->id }}">{{ $b->name }}</option>
             @endforeach
@@ -350,6 +387,16 @@
 </div>
 
 <script>
+function previewAvatar(input, imgId) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById(imgId).src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
 function openEditStudentModal(st) {
   document.getElementById('editStudentModal').style.display = 'flex';
   document.getElementById('editStudentForm').action = '/admin/students/' + st.id;
@@ -362,6 +409,14 @@ function openEditStudentModal(st) {
   document.getElementById('editStudentBatch').value = st.batch_id || '';
   document.getElementById('editStudentStatus').value = st.status || 'Active';
   document.getElementById('editStudentAddress').value = st.address || '';
+
+  // Avatar preview
+  const defaultImg = "{{ asset('images/student_female_profile_1790497748277.jpg') }}";
+  if (st.avatar) {
+    document.getElementById('editAvatarPreview').src = st.avatar.startsWith('http') ? st.avatar : ('/' + st.avatar);
+  } else {
+    document.getElementById('editAvatarPreview').src = defaultImg;
+  }
 }
 </script>
 @endsection

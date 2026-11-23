@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Batch;
 use App\Models\Course;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Student::with(['batch', 'course'])->latest();
+        $query = Student::with(['batch', 'course', 'fees'])->latest();
 
         if ($request->filled('batch_id')) {
             $query->where('batch_id', $request->batch_id);
@@ -51,30 +53,61 @@ class StudentController extends Controller
             'guardian_name' => 'nullable|string|max:255',
             'guardian_phone' => 'nullable|string|max:20',
             'class_name' => 'required|string|max:100',
-            'course_id' => 'nullable|exists:courses,id',
-            'batch_id' => 'nullable|exists:batches,id',
+            'course_id' => 'nullable',
+            'batch_id' => 'nullable',
             'admission_date' => 'nullable|date',
             'blood_group' => 'nullable|string|max:10',
             'address' => 'nullable|string',
             'status' => 'required|in:Active,Inactive,Completed',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
         ]);
 
-        if (empty($validated['student_id'])) {
-            $last = Student::latest('id')->first();
-            $nextNum = $last ? ($last->id + 2400 + 1) : 2401;
-            $validated['student_id'] = 'STD-' . $nextNum;
-        }
+        // Clean nullable relationships
+        $validated['course_id'] = $request->filled('course_id') ? $request->course_id : null;
+        $validated['batch_id'] = $request->filled('batch_id') ? $request->batch_id : null;
+        $validated['admission_date'] = $request->filled('admission_date') ? $request->admission_date : now()->toDateString();
+        $validated['email'] = $request->filled('email') ? $request->email : null;
 
+        // Auto-generate guaranteed unique student ID (STD-2401, STD-2402, ...)
+        $maxNum = 2400;
+        $existingIds = Student::pluck('student_id');
+        foreach ($existingIds as $sid) {
+            if (preg_match('/STD-(\d+)/', $sid, $matches)) {
+                $num = (int)$matches[1];
+                if ($num > $maxNum) {
+                    $maxNum = $num;
+                }
+            }
+        }
+        $validated['student_id'] = 'STD-' . ($maxNum + 1);
+
+        // Avatar upload handling
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
-            $validated['avatar'] = $path;
+            $validated['avatar'] = 'storage/' . $path;
         } else {
             $validated['avatar'] = 'images/student_female_profile_1790497748277.jpg';
         }
 
-        Student::create($validated);
+        $student = Student::create($validated);
 
-        return redirect()->route('admin.students')->with('success', 'Student added successfully!');
+        // Auto-create student user account for login if email is given
+        if (!empty($student->email)) {
+            User::firstOrCreate(
+                ['email' => $student->email],
+                [
+                    'name' => $student->name,
+                    'password' => Hash::make('password'),
+                    'role' => 'student',
+                    'phone' => $student->phone,
+                    'student_id' => $student->id,
+                    'avatar' => $student->avatar,
+                    'status' => 'active',
+                ]
+            );
+        }
+
+        return redirect()->route('admin.students')->with('success', 'Student ' . $student->name . ' (' . $student->student_id . ') added successfully!');
     }
 
     public function show($id = null)
@@ -108,15 +141,21 @@ class StudentController extends Controller
             'guardian_name' => 'nullable|string|max:255',
             'guardian_phone' => 'nullable|string|max:20',
             'class_name' => 'required|string|max:100',
-            'course_id' => 'nullable|exists:courses,id',
-            'batch_id' => 'nullable|exists:batches,id',
+            'course_id' => 'nullable',
+            'batch_id' => 'nullable',
             'blood_group' => 'nullable|string|max:10',
             'address' => 'nullable|string',
             'status' => 'required|in:Active,Inactive,Completed',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
         ]);
 
+        $validated['course_id'] = $request->filled('course_id') ? $request->course_id : null;
+        $validated['batch_id'] = $request->filled('batch_id') ? $request->batch_id : null;
+        $validated['email'] = $request->filled('email') ? $request->email : null;
+
         if ($request->hasFile('avatar')) {
-            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $validated['avatar'] = 'storage/' . $path;
         }
 
         $student->update($validated);

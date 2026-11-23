@@ -35,7 +35,12 @@ class CourseController extends Controller
         ]);
 
         $validated['slug'] = Str::slug($validated['title']);
-        $validated['image'] = 'images/hero_classroom_1790497065510.jpg';
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('courses', 'public');
+            $validated['image'] = 'storage/' . $path;
+        } else {
+            $validated['image'] = 'images/hero_classroom_1790497065510.jpg';
+        }
 
         Course::create($validated);
 
@@ -57,6 +62,10 @@ class CourseController extends Controller
         ]);
 
         $validated['slug'] = Str::slug($validated['title']);
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('courses', 'public');
+            $validated['image'] = 'storage/' . $path;
+        }
         $course->update($validated);
 
         return redirect()->route('admin.courses')->with('success', 'Course updated successfully!');

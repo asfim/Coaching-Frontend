@@ -137,8 +137,13 @@
       <h4 style="margin:0;font-weight:700;"><i class="bi bi-person-plus-fill" style="color:var(--primary);"></i> Add Teacher</h4>
       <button onclick="document.getElementById('addTeacherModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <form action="{{ route('admin.teachers.store') }}" method="POST">
+    <form action="{{ route('admin.teachers.store') }}" method="POST" enctype="multipart/form-data">
       @csrf
+      <div style="margin-bottom:14px;background:var(--gray-50);padding:12px;border-radius:var(--radius);border:1px dashed var(--gray-300);">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;"><i class="bi bi-camera-fill" style="color:var(--primary);"></i> Teacher Photo / Profile Picture</label>
+        <input type="file" name="image" class="form-control" accept="image/*">
+        <span style="font-size:0.72rem;color:var(--gray-500);display:block;margin-top:2px;">JPG, PNG, WEBP (Max 5MB). Optional.</span>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Full Name *</label>
@@ -211,9 +216,14 @@
       <h4 style="margin:0;font-weight:700;"><i class="bi bi-pencil-square" style="color:var(--primary);"></i> Edit Teacher</h4>
       <button onclick="document.getElementById('editTeacherModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <form id="editTeacherForm" method="POST">
+    <form id="editTeacherForm" method="POST" enctype="multipart/form-data">
       @csrf
       @method('PUT')
+      <div style="margin-bottom:14px;background:var(--gray-50);padding:12px;border-radius:var(--radius);border:1px dashed var(--gray-300);">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;"><i class="bi bi-camera-fill" style="color:var(--primary);"></i> Change Teacher Photo</label>
+        <input type="file" name="image" class="form-control" accept="image/*">
+        <span style="font-size:0.72rem;color:var(--gray-500);display:block;margin-top:2px;">Leave blank to keep existing photo.</span>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Full Name *</label>

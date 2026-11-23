@@ -47,7 +47,8 @@ class TeacherController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('teachers', 'public');
+            $path = $request->file('image')->store('teachers', 'public');
+            $validated['image'] = 'storage/' . $path;
         } else {
             $validated['image'] = 'images/teacher_male_1_1790497096029.jpg';
         }
@@ -74,7 +75,8 @@ class TeacherController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('teachers', 'public');
+            $path = $request->file('image')->store('teachers', 'public');
+            $validated['image'] = 'storage/' . $path;
         }
 
         $teacher->update($validated);

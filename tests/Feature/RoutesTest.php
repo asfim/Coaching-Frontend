@@ -9,6 +9,8 @@ use App\Models\Course;
 use App\Models\Teacher;
 use App\Models\Student;
 use App\Models\Notice;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class RoutesTest extends TestCase
 {
@@ -298,6 +300,10 @@ class RoutesTest extends TestCase
 
     public function test_students_crud(): void
     {
+        Storage::fake('public');
+        $avatarFile = UploadedFile::fake()->image('student_photo.jpg', 200, 200);
+
+        // 1. Create with avatar and optional empty fields
         $response = $this->actingAs($this->adminUser)->post(route('admin.students.store'), [
             'name' => 'Test Student Rahman',
             'email' => 'rahman_test@gmail.com',
@@ -305,17 +311,24 @@ class RoutesTest extends TestCase
             'guardian_name' => 'Abdur Rahman',
             'guardian_phone' => '01811223355',
             'class_name' => 'Class X',
+            'course_id' => '',
+            'batch_id' => '',
             'admission_date' => '2026-01-10',
             'blood_group' => 'A+',
             'address' => 'Mirpur, Dhaka',
             'status' => 'Active',
+            'avatar' => $avatarFile,
         ]);
         $response->assertRedirect(route('admin.students'));
+        $response->assertSessionHas('success');
 
         $student = Student::where('email', 'rahman_test@gmail.com')->first();
         $this->assertNotNull($student);
+        $this->assertStringStartsWith('STD-', $student->student_id);
+        $this->assertStringStartsWith('storage/avatars/', $student->avatar);
 
-        // Update
+        // 2. Update with new avatar
+        $newAvatar = UploadedFile::fake()->image('new_student_photo.jpg', 200, 200);
         $up = $this->actingAs($this->adminUser)->put(route('admin.students.update', $student->id), [
             'name' => 'Test Student Rahman Updated',
             'email' => 'rahman_test@gmail.com',
@@ -323,17 +336,21 @@ class RoutesTest extends TestCase
             'guardian_name' => 'Abdur Rahman Updated',
             'guardian_phone' => '01811223355',
             'class_name' => 'Class X',
-            'admission_date' => '2026-01-10',
+            'course_id' => '',
+            'batch_id' => '',
             'blood_group' => 'A+',
             'address' => 'Dhanmondi, Dhaka',
             'status' => 'Active',
+            'avatar' => $newAvatar,
         ]);
         $up->assertRedirect(route('admin.students'));
+        $up->assertSessionHas('success');
 
         $student->refresh();
         $this->assertEquals('Test Student Rahman Updated', $student->name);
+        $this->assertStringStartsWith('storage/avatars/', $student->avatar);
 
-        // Delete
+        // 3. Delete
         $del = $this->actingAs($this->adminUser)->delete(route('admin.students.destroy', $student->id));
         $del->assertRedirect(route('admin.students'));
         $this->assertNull(Student::find($student->id));
