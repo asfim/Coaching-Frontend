@@ -26,10 +26,15 @@ body{background:var(--gray-50);}
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
       <div class="icon-btn" style="background:rgba(255,255,255,.15);color:#fff;border:none;"><i class="bi bi-bell"></i></div>
       <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:var(--radius);padding:8px 14px;">
-        <img src="{{ asset('images/teacher_female_1_1790497081063.jpg') }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
-        <div><strong style="display:block;font-size:.82rem;color:#fff;">Shahida Begum</strong><span style="font-size:.7rem;color:rgba(255,255,255,.7);">Parent Portal</span></div>
+        <img src="{{ !empty(auth()->user()?->avatar) ? asset(auth()->user()->avatar) : asset('images/teacher_female_1_1790497081063.jpg') }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+        <div><strong style="display:block;font-size:.82rem;color:#fff;">{{ auth()->user()?->name ?? 'Parent' }}</strong><span style="font-size:.7rem;color:rgba(255,255,255,.7);">Parent Portal</span></div>
       </div>
-      <a href="{{ route('home') }}" style="color:rgba(255,255,255,.8);font-size:.82rem;text-decoration:none;"><i class="bi bi-box-arrow-right"></i> Logout</a>
+      <form action="{{ route('logout') }}" method="POST" style="margin:0;">
+        @csrf
+        <button type="submit" style="background:none;border:none;color:rgba(255,255,255,.9);cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:4px;">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </form>
     </div>
   </div>
 </div>

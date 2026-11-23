@@ -1,114 +1,168 @@
 @extends('layouts.admin')
 
-@section('title', 'EduManage Pro Admin')
+@section('title', 'Daily Attendance Tracking - EduManage Pro Admin')
 
 @section('breadcrumb')
-<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>attendance</span>
+<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Attendance</span>
 @endsection
 
 @section('content')
-<div class="page-header"><div><h2>Attendance Management</h2><p>Mark and track daily student attendance</p></div>
-<button class="btn btn-success btn-sm"><i class="bi bi-check-all"></i> Save Attendance</button></div>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;">
-  <div class="stat-card green"><div class="stat-icon green"><i class="bi bi-person-check-fill"></i></div><div class="stat-content"><h3>4,823</h3><p>Present Today</p></div></div>
-  <div class="stat-card red"><div class="stat-icon red"><i class="bi bi-person-x-fill"></i></div><div class="stat-content"><h3>420</h3><p>Absent Today</p></div></div>
-  <div class="stat-card yellow"><div class="stat-icon yellow"><i class="bi bi-clock-fill"></i></div><div class="stat-content"><h3>156</h3><p>Late Today</p></div></div>
-  <div class="stat-card blue"><div class="stat-icon blue"><i class="bi bi-calendar2-check"></i></div><div class="stat-content"><h3>92%</h3><p>Attendance Rate</p></div></div>
+<div class="page-header">
+  <div>
+    <h2>Attendance Management</h2>
+    <p>Mark daily student attendance, view stats, and track absenteeism</p>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <button class="btn btn-outline btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print Sheet</button>
+  </div>
 </div>
 
-<!-- Chart -->
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;">
-  <h5 style="font-weight:700;margin-bottom:16px;">Monthly Attendance Chart</h5>
-  <canvas id="monthlyAttChart" height="80"></canvas>
-</div>
-
-<!-- Filters -->
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:18px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
-  <div><label class="form-label">Date</label><input type="date" class="form-control" value="2026-09-27" style="width:160px;"></div>
-  <div><label class="form-label">Class</label><select class="form-select" style="width:140px;"><option>Class X</option><option>Class IX</option><option>Class XI</option></select></div>
-  <div><label class="form-label">Batch</label><select class="form-select" style="width:140px;"><option>SSC Batch A</option><option>SSC Batch B</option><option>HSC Batch A</option></select></div>
-  <button class="btn btn-primary"><i class="bi bi-search"></i> Load</button>
-  <button class="btn btn-success" style="margin-left:auto;"><i class="bi bi-person-check"></i> Mark All Present</button>
-</div>
-
-<!-- Attendance List -->
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
-  <div style="padding:16px 20px;background:var(--gray-50);border-bottom:1px solid var(--border);display:flex;gap:16px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);">
-    <span style="min-width:50px;">SL</span><span style="flex:1;">Student</span><span style="min-width:80px;">ID</span><span style="min-width:280px;margin-left:auto;">Attendance</span>
-  </div>
-  
-  <div class="attendance-row">
-    <span style="min-width:50px;font-size:.85rem;color:var(--gray-500);">1</span>
-    <div style="display:flex;align-items:center;gap:10px;flex:1;"><img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" style="width:38px;height:38px;border-radius:10px;object-fit:cover;"><div><strong style="display:block;font-size:.875rem;">Fatima Begum</strong><small style="color:var(--gray-500);">#STD-2401</small></div></div>
-    <div class="attendance-toggle-group" style="margin-left:auto;">
-      <button class="att-toggle present selected" onclick="setAtt(this,'present')">Present</button>
-      <button class="att-toggle absent" onclick="setAtt(this,'absent')">Absent</button>
-      <button class="att-toggle late" onclick="setAtt(this,'late')">Late</button>
-      <button class="att-toggle leave" onclick="setAtt(this,'leave')">Leave</button>
+<!-- Attendance Stats -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+  <div class="stat-card green">
+    <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $presentCount }}</h3>
+      <p>Present Today</p>
     </div>
   </div>
-  <div class="attendance-row">
-    <span style="min-width:50px;font-size:.85rem;color:var(--gray-500);">2</span>
-    <div style="display:flex;align-items:center;gap:10px;flex:1;"><img src="{{ asset('images/student_male_profile_1790497728356.jpg') }}" style="width:38px;height:38px;border-radius:10px;object-fit:cover;"><div><strong style="display:block;font-size:.875rem;">Rakibul Hasan</strong><small style="color:var(--gray-500);">#STD-2402</small></div></div>
-    <div class="attendance-toggle-group" style="margin-left:auto;">
-      <button class="att-toggle present selected" onclick="setAtt(this,'present')">Present</button>
-      <button class="att-toggle absent" onclick="setAtt(this,'absent')">Absent</button>
-      <button class="att-toggle late" onclick="setAtt(this,'late')">Late</button>
-      <button class="att-toggle leave" onclick="setAtt(this,'leave')">Leave</button>
+  <div class="stat-card red">
+    <div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $absentCount }}</h3>
+      <p>Absent Today</p>
     </div>
   </div>
-  <div class="attendance-row">
-    <span style="min-width:50px;font-size:.85rem;color:var(--gray-500);">3</span>
-    <div style="display:flex;align-items:center;gap:10px;flex:1;"><img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" style="width:38px;height:38px;border-radius:10px;object-fit:cover;"><div><strong style="display:block;font-size:.875rem;">Sumaiya Islam</strong><small style="color:var(--gray-500);">#STD-2403</small></div></div>
-    <div class="attendance-toggle-group" style="margin-left:auto;">
-      <button class="att-toggle present selected" onclick="setAtt(this,'present')">Present</button>
-      <button class="att-toggle absent" onclick="setAtt(this,'absent')">Absent</button>
-      <button class="att-toggle late" onclick="setAtt(this,'late')">Late</button>
-      <button class="att-toggle leave" onclick="setAtt(this,'leave')">Leave</button>
+  <div class="stat-card orange">
+    <div class="stat-icon orange"><i class="bi bi-clock-history"></i></div>
+    <div class="stat-content">
+      <h3>{{ $lateCount }}</h3>
+      <p>Late Arrivals</p>
     </div>
   </div>
-  <div class="attendance-row">
-    <span style="min-width:50px;font-size:.85rem;color:var(--gray-500);">4</span>
-    <div style="display:flex;align-items:center;gap:10px;flex:1;"><img src="{{ asset('images/student_male_profile_1790497728356.jpg') }}" style="width:38px;height:38px;border-radius:10px;object-fit:cover;"><div><strong style="display:block;font-size:.875rem;">Mahbub Rahman</strong><small style="color:var(--gray-500);">#STD-2404</small></div></div>
-    <div class="attendance-toggle-group" style="margin-left:auto;">
-      <button class="att-toggle present selected" onclick="setAtt(this,'present')">Present</button>
-      <button class="att-toggle absent" onclick="setAtt(this,'absent')">Absent</button>
-      <button class="att-toggle late" onclick="setAtt(this,'late')">Late</button>
-      <button class="att-toggle leave" onclick="setAtt(this,'leave')">Leave</button>
-    </div>
-  </div>
-  <div class="attendance-row">
-    <span style="min-width:50px;font-size:.85rem;color:var(--gray-500);">5</span>
-    <div style="display:flex;align-items:center;gap:10px;flex:1;"><img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" style="width:38px;height:38px;border-radius:10px;object-fit:cover;"><div><strong style="display:block;font-size:.875rem;">Nadia Akter</strong><small style="color:var(--gray-500);">#STD-2405</small></div></div>
-    <div class="attendance-toggle-group" style="margin-left:auto;">
-      <button class="att-toggle present selected" onclick="setAtt(this,'present')">Present</button>
-      <button class="att-toggle absent" onclick="setAtt(this,'absent')">Absent</button>
-      <button class="att-toggle late" onclick="setAtt(this,'late')">Late</button>
-      <button class="att-toggle leave" onclick="setAtt(this,'leave')">Leave</button>
+  <div class="stat-card blue">
+    <div class="stat-icon blue"><i class="bi bi-calendar2-range"></i></div>
+    <div class="stat-content">
+      <h3>{{ $leaveCount }}</h3>
+      <p>On Leave</p>
     </div>
   </div>
 </div>
 
+<!-- Date and Batch Filter -->
+<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:20px;">
+  <form method="GET" action="{{ route('admin.attendance') }}" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+    <div style="min-width:180px;">
+      <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Date</label>
+      <input type="date" name="date" class="form-control" value="{{ $date }}" onchange="this.form.submit()">
+    </div>
+    <div style="min-width:220px;">
+      <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Select Batch</label>
+      <select name="batch_id" class="form-select" onchange="this.form.submit()">
+        @foreach($batches as $b)
+          <option value="{{ $b->id }}" {{ $selectedBatch && $selectedBatch->id == $b->id ? 'selected' : '' }}>
+            {{ $b->name }} ({{ $b->batch_code }})
+          </option>
+        @endforeach
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Load Sheet</button>
+  </form>
 </div>
-</div>
+
+<!-- Mark Attendance Form -->
+<form action="{{ route('admin.attendance.mark') }}" method="POST">
+  @csrf
+  <input type="hidden" name="date" value="{{ $date }}">
+  <input type="hidden" name="batch_id" value="{{ $selectedBatch?->id }}">
+
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:20px;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--gray-50);">
+      <div>
+        <h5 style="margin:0;font-weight:700;">
+          {{ $selectedBatch ? $selectedBatch->name : 'All Batches' }} — Attendance for {{ \Carbon\Carbon::parse($date)->format('l, d F Y') }}
+        </h5>
+        <span style="font-size:0.8rem;color:var(--gray-500);">Total Students: {{ $students->count() }}</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="markAll('present')"><i class="bi bi-check-all"></i> Mark All Present</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th>Class</th>
+            <th>Phone</th>
+            <th style="text-align:center;">Attendance Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($students as $st)
+            @php
+              $currentStatus = isset($attendances[$st->id]) ? $attendances[$st->id]->status : 'present';
+            @endphp
+            <tr>
+              <td><strong>#{{ $st->student_id }}</strong></td>
+              <td>
+                <div class="avatar-cell">
+                  <img src="{{ asset($st->avatar ?: 'images/student_female_profile_1790497748277.jpg') }}" alt="{{ $st->name }}">
+                  <div>
+                    <strong>{{ $st->name }}</strong>
+                    <div style="font-size:0.75rem;color:var(--gray-500);">Guardian: {{ $st->guardian_phone ?: $st->phone }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ $st->class_name }}</td>
+              <td>{{ $st->phone }}</td>
+              <td style="text-align:center;">
+                <div style="display:inline-flex;gap:8px;">
+                  <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;border:1px solid #10b981;cursor:pointer;background:{{ $currentStatus === 'present' ? '#ecfdf5' : '#fff' }};">
+                    <input type="radio" name="status[{{ $st->id }}]" value="present" {{ $currentStatus === 'present' ? 'checked' : '' }} class="att-radio-present">
+                    <span style="color:#059669;font-weight:600;font-size:0.8rem;">Present</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;border:1px solid #ef4444;cursor:pointer;background:{{ $currentStatus === 'absent' ? '#fef2f2' : '#fff' }};">
+                    <input type="radio" name="status[{{ $st->id }}]" value="absent" {{ $currentStatus === 'absent' ? 'checked' : '' }}>
+                    <span style="color:#dc2626;font-weight:600;font-size:0.8rem;">Absent</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;border:1px solid #f59e0b;cursor:pointer;background:{{ $currentStatus === 'late' ? '#fffbeb' : '#fff' }};">
+                    <input type="radio" name="status[{{ $st->id }}]" value="late" {{ $currentStatus === 'late' ? 'checked' : '' }}>
+                    <span style="color:#d97706;font-weight:600;font-size:0.8rem;">Late</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;border:1px solid #3b82f6;cursor:pointer;background:{{ $currentStatus === 'leave' ? '#eff6ff' : '#fff' }};">
+                    <input type="radio" name="status[{{ $st->id }}]" value="leave" {{ $currentStatus === 'leave' ? 'checked' : '' }}>
+                    <span style="color:#2563eb;font-weight:600;font-size:0.8rem;">Leave</span>
+                  </label>
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="5" style="text-align:center;padding:30px;color:var(--gray-500);">
+                No students enrolled in this batch yet.
+              </td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+
+    @if($students->count() > 0)
+    <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+      <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle"></i> Save Attendance Sheet</button>
+    </div>
+    @endif
+  </div>
+</form>
+
 <script>
-function setAtt(btn, type) {
-  const group = btn.closest('.attendance-toggle-group');
-  group.querySelectorAll('.att-toggle').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
+function markAll(status) {
+  if (status === 'present') {
+    document.querySelectorAll('.att-radio-present').forEach(el => el.checked = true);
+  }
 }
-new Chart(document.getElementById('monthlyAttChart'),{type:'line',data:{labels:['Week 1','Week 2','Week 3','Week 4'],datasets:[{label:'Present %',data:[94,91,96,92],borderColor:'#059669',backgroundColor:'rgba(5,150,105,.1)',tension:.4,fill:true},{label:'Absent %',data:[6,9,4,8],borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.1)',tension:.4,fill:true}]},options:{responsive:true,scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}});
-</script>
-@endsection
-
-@section('scripts')
-<script>
-function setAtt(btn, type) {
-  const group = btn.closest('.attendance-toggle-group');
-  group.querySelectorAll('.att-toggle').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-}
-new Chart(document.getElementById('monthlyAttChart'),{type:'line',data:{labels:['Week 1','Week 2','Week 3','Week 4'],datasets:[{label:'Present %',data:[94,91,96,92],borderColor:'#059669',backgroundColor:'rgba(5,150,105,.1)',tension:.4,fill:true},{label:'Absent %',data:[6,9,4,8],borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.1)',tension:.4,fill:true}]},options:{responsive:true,scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}});
 </script>
 @endsection

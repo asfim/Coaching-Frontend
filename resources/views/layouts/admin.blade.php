@@ -37,12 +37,18 @@ body{overflow-x:hidden;}
     <a href="{{ route('admin.routine') }}" class="nav-item {{ request()->routeIs('admin.routine*') ? 'active' : '' }}"><i class="bi bi-clock-history"></i> Routine</a>
     <a href="{{ route('admin.fees') }}" class="nav-item {{ request()->routeIs('admin.fees*') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> Fees</a>
     <a href="{{ route('admin.invoice') }}" class="nav-item {{ request()->routeIs('admin.invoice*') ? 'active' : '' }}"><i class="bi bi-receipt"></i> Invoices</a>
+    <!-- Accounts Menu requested by user -->
+    <a href="{{ route('admin.accounts.index') }}" class="nav-item {{ request()->routeIs('admin.accounts*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Accounts</a>
     <a href="{{ route('admin.notices') }}" class="nav-item {{ request()->routeIs('admin.notices*') ? 'active' : '' }}"><i class="bi bi-megaphone"></i> Notices</a>
     <a href="{{ route('admin.sms') }}" class="nav-item {{ request()->routeIs('admin.sms*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i> SMS / Notify</a>
     <a href="{{ route('admin.reports') }}" class="nav-item {{ request()->routeIs('admin.reports*') ? 'active' : '' }}"><i class="bi bi-bar-chart"></i> Reports</a>
     <a href="{{ route('admin.settings') }}" class="nav-item {{ request()->routeIs('admin.settings*') ? 'active' : '' }}"><i class="bi bi-gear"></i> Settings</a>
-    <div style="margin-top:16px;padding:0 8px;">
+    <div style="margin-top:16px;padding:0 8px;display:flex;flex-direction:column;gap:8px;">
       <a href="{{ route('home') }}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"><i class="bi bi-box-arrow-left"></i> Back to Site</a>
+      <form action="{{ route('logout') }}" method="POST" style="margin:0;">
+        @csrf
+        <button type="submit" class="btn btn-danger btn-sm" style="width:100%;justify-content:center;"><i class="bi bi-box-arrow-right"></i> Logout</button>
+      </form>
     </div>
   </nav>
 </div>
@@ -57,13 +63,48 @@ body{overflow-x:hidden;}
     <div class="topbar-right">
       <div class="icon-btn"><i class="bi bi-bell"></i><span class="notif-dot"></span></div>
       <div class="icon-btn"><i class="bi bi-envelope"></i></div>
-      <div class="topbar-user"><img src="{{ asset('images/teacher_male_2_1790497121228.jpg') }}" alt="Admin"><div class="user-info"><strong>Abdul Karim</strong><span>Administrator</span></div></div>
+      <div class="topbar-user">
+        <img src="{{ !empty(auth()->user()?->avatar) ? asset(auth()->user()->avatar) : asset('images/teacher_male_2_1790497121228.jpg') }}" alt="User">
+        <div class="user-info">
+          <strong>{{ auth()->user()?->name ?? 'Administrator' }}</strong>
+          <span>{{ ucfirst(auth()->user()?->role ?? 'Admin') }}</span>
+        </div>
+      </div>
+      <form action="{{ route('logout') }}" method="POST" style="margin-left:6px;">
+        @csrf
+        <button type="submit" class="btn btn-outline btn-sm" title="Sign Out" style="padding:6px 12px;font-size:.8rem;">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </form>
     </div>
   </div>
   <div class="breadcrumb-bar">
     @yield('breadcrumb')
   </div>
   <div class="page-content">
+    @if(session('success'))
+      <div style="background:#ecfdf5;border-left:4px solid #059669;padding:12px 16px;border-radius:8px;margin-bottom:16px;color:#065f46;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div><i class="bi bi-check-circle-fill" style="margin-right:8px;color:#059669;font-size:1.1rem;"></i> <strong>Success:</strong> {{ session('success') }}</div>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#065f46;font-size:1.2rem;"><i class="bi bi-x"></i></button>
+      </div>
+    @endif
+    @if(session('error'))
+      <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:8px;margin-bottom:16px;color:#991b1b;display:flex;align-items:center;justify-content:space-between;">
+        <div><i class="bi bi-exclamation-triangle-fill" style="margin-right:8px;color:#dc2626;"></i> <strong>Error:</strong> {{ session('error') }}</div>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#991b1b;font-size:1.2rem;"><i class="bi bi-x"></i></button>
+      </div>
+    @endif
+    @if($errors->any())
+      <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:8px;margin-bottom:16px;color:#991b1b;">
+        <div style="font-weight:600;margin-bottom:4px;"><i class="bi bi-exclamation-circle-fill"></i> Please fix the following errors:</div>
+        <ul style="margin:0;padding-left:20px;">
+          @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
+
     @yield('content')
   </div>
 </div>

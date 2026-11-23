@@ -1,39 +1,63 @@
 @extends('layouts.public')
 
-@section('title', 'Courses - EduManage Pro')
+@section('title', 'All Courses - EduManage Pro')
 
-@section('styles')
-<style>
-.container{max-width:1320px;margin:0 auto;padding:0 24px;}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}@media(max-width:576px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
-</style>
-@endsection
 @section('content')
-<div class="page-banner"><div class="container"><h1>Our Courses</h1><p>Comprehensive coaching programs for SSC, HSC, University Admission and Skill Development</p><div class="breadcrumb"><a href="{{ route('home') }}">Home</a><span>/</span><span>Courses</span></div></div></div>
-
-<section class="section-padding">
-  <div class="container">
-    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
-      <div style="flex:1;min-width:200px;"><label class="form-label">Search Courses</label><div class="input-icon-wrap"><i class="bi bi-search input-icon"></i><input type="text" class="form-control" placeholder="Search by name, subject..."></div></div>
-      <div><label class="form-label">Category</label><select class="form-select" style="min-width:150px;"><option>All Categories</option><option>SSC</option><option>HSC</option><option>Admission</option><option>Skills</option></select></div>
-      <div><label class="form-label">Class</label><select class="form-select" style="min-width:130px;"><option>All Classes</option><option>Class IX</option><option>Class X</option><option>Class XI</option><option>Class XII</option></select></div>
-      <button class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+<section style="background:linear-gradient(135deg,var(--primary-light),var(--secondary-light));padding:48px 0 36px;border-bottom:1px solid var(--border);">
+  <div class="container text-center">
+    <span class="badge badge-primary" style="margin-bottom:10px;padding:6px 16px;border-radius:50px;">Academic Programs</span>
+    <h1 style="margin-bottom:10px;font-weight:800;">Our Coaching Courses</h1>
+    <p style="font-size:1.05rem;color:var(--gray-600);max-width:600px;margin:0 auto 20px;">
+      Comprehensive board curriculum, admission prep, and foundation batches taught by expert educators.
+    </p>
+    
+    <!-- Filter categories -->
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <a href="{{ route('courses') }}" class="btn {{ !request('category') ? 'btn-primary' : 'btn-outline' }} btn-sm">All Courses</a>
+      <a href="{{ route('courses', ['category' => 'Science']) }}" class="btn {{ request('category') == 'Science' ? 'btn-primary' : 'btn-outline' }} btn-sm">Science</a>
+      <a href="{{ route('courses', ['category' => 'HSC']) }}" class="btn {{ request('category') == 'HSC' ? 'btn-primary' : 'btn-outline' }} btn-sm">HSC</a>
+      <a href="{{ route('courses', ['category' => 'Admission']) }}" class="btn {{ request('category') == 'Admission' ? 'btn-primary' : 'btn-outline' }} btn-sm">Admission</a>
+      <a href="{{ route('courses', ['category' => 'Commerce']) }}" class="btn {{ request('category') == 'Commerce' ? 'btn-primary' : 'btn-outline' }} btn-sm">Commerce</a>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
-      <button class="btn btn-primary btn-sm">All Courses</button>
-      <button class="btn btn-outline btn-sm">SSC</button><button class="btn btn-outline btn-sm">HSC</button>
-      <button class="btn btn-outline btn-sm">Admission Test</button><button class="btn btn-outline btn-sm">Digital Skills</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-      <div class="course-card"><div class="course-img"><img src="{{ asset('images/hero_classroom_1790497065510.jpg') }}" alt=""><span class="badge badge-primary" style="position:absolute;top:12px;left:12px;">Science</span><span class="badge badge-success" style="position:absolute;top:12px;right:12px;">Enrolling</span></div><div class="course-body"><div class="course-meta"><span><i class="bi bi-clock"></i> 12 Months</span><span><i class="bi bi-people"></i> 85/100</span></div><h5>SSC Science Complete Batch 2025</h5><p style="font-size:.84rem;color:var(--gray-500);">Full SSC preparation covering Physics, Chemistry, Biology, Math and English.</p><div style="display:flex;align-items:center;gap:8px;margin-top:10px;"><img src="{{ asset('images/teacher_female_1_1790497081063.jpg') }}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"><span style="font-size:.8rem;color:var(--gray-600);">Nasrin Sultana</span></div></div><div class="course-footer"><div class="course-price">&#2547; 2,500<span>/month</span></div><a href="{{ route('course.detail') }}" class="btn btn-primary btn-sm">View Details</a></div></div>
-      <div class="course-card"><div class="course-img"><img src="{{ asset('images/students_group_study_1790497179383.jpg') }}" alt=""><span class="badge badge-secondary" style="position:absolute;top:12px;left:12px;">HSC</span><span class="badge badge-warning" style="position:absolute;top:12px;right:12px;">Almost Full</span></div><div class="course-body"><div class="course-meta"><span><i class="bi bi-clock"></i> 18 Months</span><span><i class="bi bi-people"></i> 112/120</span></div><h5>HSC Higher Math &amp; Physics Special Batch</h5><p style="font-size:.84rem;color:var(--gray-500);">Advanced HSC preparation for students targeting GPA 5.0 in Mathematics and Physics.</p><div style="display:flex;align-items:center;gap:8px;margin-top:10px;"><img src="{{ asset('images/teacher_male_2_1790497121228.jpg') }}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"><span style="font-size:.8rem;color:var(--gray-600);">Prof. Abdul Karim</span></div></div><div class="course-footer"><div class="course-price">&#2547; 3,500<span>/month</span></div><a href="{{ route('course.detail') }}" class="btn btn-primary btn-sm">View Details</a></div></div>
-      <div class="course-card"><div class="course-img"><img src="{{ asset('images/exam_hall_1790497202709.jpg') }}" alt=""><span class="badge badge-warning" style="position:absolute;top:12px;left:12px;">Admission</span><span class="badge badge-success" style="position:absolute;top:12px;right:12px;">Enrolling</span></div><div class="course-body"><div class="course-meta"><span><i class="bi bi-clock"></i> 6 Months</span><span><i class="bi bi-people"></i> 165/200</span></div><h5>University Admission Test Crash Course</h5><p style="font-size:.84rem;color:var(--gray-500);">Intensive preparation for DU, BUET and other university admission tests.</p><div style="display:flex;align-items:center;gap:8px;margin-top:10px;"><img src="{{ asset('images/teacher_male_1_1790497096029.jpg') }}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"><span style="font-size:.8rem;color:var(--gray-600);">Md. Rafiqul Islam</span></div></div><div class="course-footer"><div class="course-price">&#2547; 5,000<span>/month</span></div><a href="{{ route('course.detail') }}" class="btn btn-primary btn-sm">View Details</a></div></div>
-      <div class="course-card"><div class="course-img"><img src="{{ asset('images/students_group_study_1790497179383.jpg') }}" alt=""><span class="badge badge-info" style="position:absolute;top:12px;left:12px;">IELTS</span></div><div class="course-body"><div class="course-meta"><span><i class="bi bi-clock"></i> 3 Months</span><span><i class="bi bi-people"></i> 45/60</span></div><h5>IELTS Preparation Premium Course</h5><p style="font-size:.84rem;color:var(--gray-500);">Complete IELTS preparation with listening, reading, writing and speaking modules.</p><div style="display:flex;align-items:center;gap:8px;margin-top:10px;"><img src="{{ asset('images/teacher_female_2_1790497140028.jpg') }}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"><span style="font-size:.8rem;color:var(--gray-600);">Farhana Akter</span></div></div><div class="course-footer"><div class="course-price">&#2547; 8,000<span>/month</span></div><a href="{{ route('course.detail') }}" class="btn btn-primary btn-sm">View Details</a></div></div>
-      <div class="course-card"><div class="course-img"><img src="{{ asset('images/hero_classroom_1790497065510.jpg') }}" alt=""><span class="badge badge-success" style="position:absolute;top:12px;left:12px;">SSC</span></div><div class="course-body"><div class="course-meta"><span><i class="bi bi-clock"></i> 12 Months</span><span><i class="bi bi-people"></i> 70/80</span></div><h5>SSC Humanities Complete Program</h5><p style="font-size:.84rem;color:var(--gray-500);">Full SSC preparation for Humanities — Bangla, English, History, Civics and Economics.</p><div style="display:flex;align-items:center;gap:8px;margin-top:10px;"><img src="{{ asset('images/teacher_female_1_1790497081063.jpg') }}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"><span style="font-size:.8rem;color:var(--gray-600);">Nasrin Sultana</span></div></div><div class="course-footer"><div class="course-price">&#2547; 2,000<span>/month</span></div><a href="{{ route('course.detail') }}" class="btn btn-primary btn-sm">View Details</a></div></div>
-      <div class="course-card"><div class="course-img"><img src="{{ asset('images/about_building_1790497156877.jpg') }}" alt=""><span class="badge badge-secondary" style="position:absolute;top:12px;left:12px;">Digital</span></div><div class="course-body"><div class="course-meta"><span><i class="bi bi-clock"></i> 4 Months</span><span><i class="bi bi-people"></i> 35/50</span></div><h5>Digital Marketing &amp; Social Media Course</h5><p style="font-size:.84rem;color:var(--gray-500);">Learn SEO, Facebook ads, content creation and freelancing skills for the digital economy.</p><div style="display:flex;align-items:center;gap:8px;margin-top:10px;"><img src="{{ asset('images/teacher_male_1_1790497096029.jpg') }}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"><span style="font-size:.8rem;color:var(--gray-600);">Md. Rafiqul Islam</span></div></div><div class="course-footer"><div class="course-price">&#2547; 6,000<span>/month</span></div><a href="{{ route('course.detail') }}" class="btn btn-primary btn-sm">View Details</a></div></div>
-    </div>
-    <div style="display:flex;justify-content:center;margin-top:36px;gap:6px;"><div class="page-item disabled"><i class="bi bi-chevron-left"></i></div><div class="page-item active">1</div><div class="page-item">2</div><div class="page-item">3</div><div class="page-item"><i class="bi bi-chevron-right"></i></div></div>
   </div>
 </section>
 
-<section class="cta-section"><div class="container"><h2 style="margin-bottom:14px;">Want to Enroll?</h2><p>Contact us to reserve your seat. Limited seats available.</p><div class="cta-actions"><a href="{{ route('contact') }}" class="btn btn-white btn-lg"><i class="bi bi-person-plus"></i> Enroll Now</a><a href="{{ route('contact') }}" class="btn btn-outline-white btn-lg"><i class="bi bi-telephone"></i> Call Us</a></div></div></section>
+<section class="section-padding">
+  <div class="container">
+    <div class="grid-3" style="gap:28px;">
+      @forelse($courses as $c)
+      <div class="course-card" style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);background:#fff;display:flex;flex-direction:column;">
+        <div class="course-img" style="position:relative;height:200px;overflow:hidden;">
+          <img src="{{ asset($c->image ?: 'images/hero_classroom_1790497065510.jpg') }}" alt="{{ $c->title }}" style="width:100%;height:100%;object-fit:cover;">
+          <span class="badge badge-primary" style="position:absolute;top:14px;left:14px;">{{ $c->category }}</span>
+        </div>
+        <div class="course-body" style="padding:22px;flex:1;display:flex;flex-direction:column;">
+          <div class="course-meta" style="display:flex;gap:16px;margin-bottom:10px;font-size:0.82rem;color:var(--gray-500);">
+            <span><i class="bi bi-clock"></i> {{ $c->duration }}</span>
+            <span><i class="bi bi-people"></i> {{ $c->seats }} Seats</span>
+          </div>
+          <h5 style="margin-bottom:10px;font-weight:700;font-size:1.1rem;">{{ $c->title }}</h5>
+          <p style="font-size:0.85rem;color:var(--gray-500);flex:1;line-height:1.5;">{{ Str::limit($c->description, 95) }}</p>
+        </div>
+        <div class="course-footer" style="padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--gray-50);">
+          <div class="course-price" style="font-size:1.25rem;font-weight:800;color:var(--primary);">
+            ৳ {{ number_format($c->fee, 0) }}<span style="font-size:0.75rem;font-weight:400;color:var(--gray-500);">/mo</span>
+          </div>
+          <a href="{{ route('course.detail', $c->slug ?: $c->id) }}" class="btn btn-primary btn-sm">View Details &rarr;</a>
+        </div>
+      </div>
+      @empty
+      <div style="grid-column:1/-1;text-align:center;padding:50px;">
+        <h5>No courses found in this category.</h5>
+      </div>
+      @endforelse
+    </div>
+
+    @if($courses->hasPages())
+      <div style="margin-top:36px;display:flex;justify-content:center;">
+        {{ $courses->links() }}
+      </div>
+    @endif
+  </div>
+</section>
 @endsection

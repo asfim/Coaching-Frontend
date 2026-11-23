@@ -34,9 +34,23 @@
       <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact*') ? 'active' : '' }}">Contact</a>
     </nav>
     <div class="pub-nav-actions">
-      <a href="{{ route('student.dashboard') }}" class="btn btn-outline btn-sm"><i class="bi bi-person"></i> Student</a>
-      <a href="{{ route('parent.dashboard') }}" class="btn btn-outline btn-sm"><i class="bi bi-people"></i> Parent</a>
-      <a href="{{ route('admin.dashboard') }}" class="btn btn-primary btn-sm"><i class="bi bi-shield-lock"></i> Admin</a>
+      @auth
+        @if(auth()->user()->role === 'admin')
+          <a href="{{ route('admin.dashboard') }}" class="btn btn-primary btn-sm"><i class="bi bi-speedometer2"></i> Admin Panel</a>
+        @elseif(auth()->user()->role === 'teacher')
+          <a href="{{ route('teacher.dashboard') }}" class="btn btn-primary btn-sm"><i class="bi bi-person-badge"></i> Teacher Portal</a>
+        @elseif(auth()->user()->role === 'parent')
+          <a href="{{ route('parent.dashboard') }}" class="btn btn-primary btn-sm"><i class="bi bi-people"></i> Parent Portal</a>
+        @else
+          <a href="{{ route('student.dashboard') }}" class="btn btn-primary btn-sm"><i class="bi bi-mortarboard"></i> Student Portal</a>
+        @endif
+        <form action="{{ route('logout') }}" method="POST" style="display:inline;margin:0;">
+          @csrf
+          <button type="submit" class="btn btn-outline btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</button>
+        </form>
+      @else
+        <a href="{{ route('login') }}" class="btn btn-primary btn-sm"><i class="bi bi-box-arrow-in-right"></i> Portal Sign In</a>
+      @endauth
     </div>
     <button class="pub-hamburger" onclick="document.getElementById('pubNavLinks').classList.toggle('open')"><i class="bi bi-list"></i></button>
   </div>

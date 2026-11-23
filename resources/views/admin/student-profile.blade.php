@@ -1,164 +1,159 @@
 @extends('layouts.admin')
 
-@section('title', 'EduManage Pro Admin')
+@section('title', ($student->name ?? 'Student Profile') . ' - EduManage Pro')
 
 @section('breadcrumb')
-<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>student management</span>
+<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ route('admin.students') }}">Students</a><i class="bi bi-chevron-right"></i><span>Profile</span>
 @endsection
 
 @section('content')
-<div class="page-header"><div><h2>Student Profile</h2><p>Detailed student information and academic records</p></div>
-<div style="display:flex;gap:10px;"><button class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i> Edit</button><button class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Print</button></div>
+<div class="page-header">
+  <div>
+    <h2>Student Academic Profile</h2>
+    <p>Detailed performance report, attendance stats, and fee history for {{ $student->name }}</p>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <a href="{{ route('admin.students') }}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Back to Students</a>
+    <button class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print Profile</button>
+  </div>
 </div>
 
-<div class="profile-card-top" style="margin-bottom:24px;">
+<div class="profile-card-top" style="margin-bottom:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm);">
   <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;">
     <div class="profile-avatar-wrap">
-      <img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" class="avatar avatar-2xl avatar-circle">
-      <div class="profile-status-dot"></div>
+      <img src="{{ asset($student->avatar ?: 'images/student_female_profile_1790497748277.jpg') }}" class="avatar avatar-2xl avatar-circle" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--primary-light);">
     </div>
     <div style="flex:1;">
-      <h2 class="profile-name">Fatima Begum</h2>
-      <div class="profile-meta">
-        <span><i class="bi bi-card-text"></i> #STD-2401</span>
-        <span><i class="bi bi-journal-bookmark"></i> Class X — SSC Batch A</span>
-        <span><i class="bi bi-telephone"></i> 01712-345678</span>
-        <span><i class="bi bi-calendar3"></i> Admitted: 01 Jan 2024</span>
+      <h2 class="profile-name" style="margin-bottom:6px;font-weight:800;">{{ $student->name }}</h2>
+      <div class="profile-meta" style="display:flex;gap:16px;flex-wrap:wrap;font-size:0.85rem;color:var(--gray-600);margin-bottom:16px;">
+        <span><i class="bi bi-card-text"></i> #{{ $student->student_id }}</span>
+        <span><i class="bi bi-journal-bookmark"></i> {{ $student->class_name }} — {{ $student->batch?->name ?: 'No Batch' }}</span>
+        <span><i class="bi bi-telephone"></i> {{ $student->phone }}</span>
+        <span><i class="bi bi-calendar3"></i> Admitted: {{ $student->admission_date ? \Carbon\Carbon::parse($student->admission_date)->format('d M, Y') : '-' }}</span>
       </div>
-      <div class="profile-info-grid">
-        <div class="profile-info-item"><label>Guardian</label><strong>Karim Hossain</strong></div>
-        <div class="profile-info-item"><label>Guardian Phone</label><strong>01712-111222</strong></div>
-        <div class="profile-info-item"><label>Current GPA</label><strong>4.83</strong></div>
-        <div class="profile-info-item"><label>Attendance</label><strong>94.2%</strong></div>
-        <div class="profile-info-item"><label>Fee Status</label><strong>&#2547; 0 Due</strong></div>
-        <div class="profile-info-item"><label>Status</label><strong>&#10003; Active</strong></div>
+      <div class="profile-info-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;background:var(--gray-50);padding:14px;border-radius:var(--radius);">
+        <div class="profile-info-item"><label style="display:block;font-size:0.75rem;color:var(--gray-500);">Guardian</label><strong>{{ $student->guardian_name ?: '-' }}</strong></div>
+        <div class="profile-info-item"><label style="display:block;font-size:0.75rem;color:var(--gray-500);">Guardian Phone</label><strong>{{ $student->guardian_phone ?: '-' }}</strong></div>
+        <div class="profile-info-item"><label style="display:block;font-size:0.75rem;color:var(--gray-500);">Blood Group</label><strong>{{ $student->blood_group ?: '-' }}</strong></div>
+        <div class="profile-info-item"><label style="display:block;font-size:0.75rem;color:var(--gray-500);">Attendance</label><strong>{{ $attRate }}%</strong></div>
+        <div class="profile-info-item"><label style="display:block;font-size:0.75rem;color:var(--gray-500);">Fee Due</label><strong style="color:{{ $totalDue > 0 ? 'var(--danger)' : 'var(--success)' }};">৳{{ number_format($totalDue, 0) }}</strong></div>
+        <div class="profile-info-item"><label style="display:block;font-size:0.75rem;color:var(--gray-500);">Status</label><strong style="color:var(--success);">{{ $student->status }}</strong></div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Stats Cards -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;">
-  <div class="stat-card blue"><div class="stat-icon blue"><i class="bi bi-calendar2-check"></i></div><div class="stat-content"><h3>94%</h3><p>Attendance</p></div></div>
-  <div class="stat-card green"><div class="stat-icon green"><i class="bi bi-trophy-fill"></i></div><div class="stat-content"><h3>4.83</h3><p>Current GPA</p></div></div>
-  <div class="stat-card purple"><div class="stat-icon purple"><i class="bi bi-journal-check"></i></div><div class="stat-content"><h3>6</h3><p>Courses Taken</p></div></div>
-  <div class="stat-card orange"><div class="stat-icon orange"><i class="bi bi-cash-coin"></i></div><div class="stat-content"><h3>৳0</h3><p>Fee Due</p></div></div>
-</div>
-
-<!-- Tabs -->
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
-  <div class="tab-nav" id="profileTabs">
-    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
-    <button class="tab-btn" onclick="switchTab('attendance')">Attendance</button>
-    <button class="tab-btn" onclick="switchTab('results')">Results</button>
-    <button class="tab-btn" onclick="switchTab('fees')">Fees</button>
-    <button class="tab-btn" onclick="switchTab('exams')">Exams</button>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;">
+  <div class="stat-card blue">
+    <div class="stat-icon blue"><i class="bi bi-calendar2-check"></i></div>
+    <div class="stat-content">
+      <h3>{{ $attRate }}%</h3>
+      <p>Attendance Rate</p>
+    </div>
   </div>
-  <div style="padding:24px;">
-    <div id="tab-overview" class="tab-panel active">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
-        <div>
-          <h5 style="font-weight:700;margin-bottom:14px;color:var(--gray-900);">Personal Information</h5>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);"><span style="font-weight:600;color:var(--gray-700);min-width:140px;font-size:.875rem;">Full Name</span><span style="color:var(--gray-600);font-size:.875rem;">Fatima Begum</span></div>
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);"><span style="font-weight:600;color:var(--gray-700);min-width:140px;font-size:.875rem;">Date of Birth</span><span style="color:var(--gray-600);font-size:.875rem;">15 March 2008</span></div>
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);"><span style="font-weight:600;color:var(--gray-700);min-width:140px;font-size:.875rem;">Gender</span><span style="color:var(--gray-600);font-size:.875rem;">Female</span></div>
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);"><span style="font-weight:600;color:var(--gray-700);min-width:140px;font-size:.875rem;">Blood Group</span><span style="color:var(--gray-600);font-size:.875rem;">B+</span></div>
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);"><span style="font-weight:600;color:var(--gray-700);min-width:140px;font-size:.875rem;">Phone</span><span style="color:var(--gray-600);font-size:.875rem;">01712-345678</span></div>
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);"><span style="font-weight:600;color:var(--gray-700);min-width:140px;font-size:.875rem;">Email</span><span style="color:var(--gray-600);font-size:.875rem;">fatima@email.com</span></div>
-            <div style="display:flex;gap:12px;padding:10px 0;"><span style="font-weight:600;color:var(--gray-700);min-width:140px;font-size:.875rem;">Address</span><span style="color:var(--gray-600);font-size:.875rem;">House 5, Road 3, Mirpur-10, Dhaka</span></div>
-          </div>
-        </div>
-        <div>
-          <h5 style="font-weight:700;margin-bottom:14px;color:var(--gray-900);">Academic Overview</h5>
-          <canvas id="studentChart" height="160"></canvas>
-        </div>
-      </div>
+  <div class="stat-card green">
+    <div class="stat-icon green"><i class="bi bi-trophy-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ number_format($avgGpa, 2) }}</h3>
+      <p>Average GPA</p>
     </div>
-    <div id="tab-attendance" class="tab-panel">
-      <h5 style="font-weight:700;margin-bottom:16px;">Monthly Attendance Record</h5>
-      <canvas id="attChart" height="120" style="margin-bottom:16px;"></canvas>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead><tr><th>Month</th><th>Working Days</th><th>Present</th><th>Absent</th><th>Late</th><th>%</th></tr></thead>
-          <tbody>
-            <tr><td>September 2026</td><td>26</td><td>25</td><td>1</td><td>0</td><td><span class="badge badge-success">96.2%</span></td></tr>
-            <tr><td>August 2026</td><td>25</td><td>23</td><td>2</td><td>1</td><td><span class="badge badge-success">92%</span></td></tr>
-            <tr><td>July 2026</td><td>24</td><td>22</td><td>2</td><td>0</td><td><span class="badge badge-success">91.7%</span></td></tr>
-          </tbody>
-        </table>
-      </div>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-icon purple"><i class="bi bi-cash-stack"></i></div>
+    <div class="stat-content">
+      <h3>৳{{ number_format($totalPaid, 0) }}</h3>
+      <p>Total Fees Paid</p>
     </div>
-    <div id="tab-results" class="tab-panel">
-      <h5 style="font-weight:700;margin-bottom:16px;">Exam Results</h5>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead><tr><th>Subject</th><th>Full Marks</th><th>Obtained</th><th>Grade</th><th>GPA</th></tr></thead>
-          <tbody>
-            <tr><td>Physics</td><td>100</td><td>88</td><td>A+</td><td>5.0</td></tr>
-            <tr><td>Chemistry</td><td>100</td><td>85</td><td>A+</td><td>5.0</td></tr>
-            <tr><td>Mathematics</td><td>100</td><td>92</td><td>A+</td><td>5.0</td></tr>
-            <tr><td>Biology</td><td>100</td><td>80</td><td>A</td><td>4.0</td></tr>
-            <tr><td>English</td><td>100</td><td>78</td><td>A</td><td>4.0</td></tr>
-            <tr><td>Bangla</td><td>100</td><td>82</td><td>A+</td><td>5.0</td></tr>
-            <tr><td colspan="2"><strong>Total</strong></td><td><strong>505/600</strong></td><td><strong>A+</strong></td><td><strong>4.83</strong></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div id="tab-fees" class="tab-panel">
-      <h5 style="font-weight:700;margin-bottom:16px;">Fee Payment History</h5>
-      <div class="alert alert-success" style="margin-bottom:16px;"><i class="bi bi-check-circle-fill"></i> All fees are paid. No dues outstanding.</div>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead><tr><th>Invoice</th><th>Month</th><th>Amount</th><th>Payment Date</th><th>Method</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td>#INV-001</td><td>September 2026</td><td>৳2,500</td><td>01 Sep 2026</td><td>bKash</td><td><span class="badge badge-success">Paid</span></td></tr>
-            <tr><td>#INV-002</td><td>August 2026</td><td>৳2,500</td><td>02 Aug 2026</td><td>Cash</td><td><span class="badge badge-success">Paid</span></td></tr>
-            <tr><td>#INV-003</td><td>July 2026</td><td>৳2,500</td><td>05 Jul 2026</td><td>bKash</td><td><span class="badge badge-success">Paid</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div id="tab-exams" class="tab-panel">
-      <h5 style="font-weight:700;margin-bottom:16px;">Upcoming Exams</h5>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="display:flex;gap:14px;padding:16px;background:var(--primary-light);border-radius:var(--radius-lg);border-left:4px solid var(--primary);">
-          <div style="width:50px;height:50px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-direction:column;font-size:.65rem;">OCT<div style="font-size:1rem;">05</div></div>
-          <div><strong style="display:block;font-size:.9rem;">SSC Model Test — Full Syllabus</strong><span style="font-size:.8rem;color:var(--gray-600);"><i class="bi bi-clock"></i> 9:00 AM – 12:00 PM &nbsp; <i class="bi bi-geo-alt"></i> Exam Hall A</span></div>
-        </div>
-        <div style="display:flex;gap:14px;padding:16px;background:var(--warning-light);border-radius:var(--radius-lg);border-left:4px solid var(--warning);">
-          <div style="width:50px;height:50px;background:var(--warning);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-direction:column;font-size:.65rem;">OCT<div style="font-size:1rem;">18</div></div>
-          <div><strong style="display:block;font-size:.9rem;">Monthly Test — Physics &amp; Math</strong><span style="font-size:.8rem;color:var(--gray-600);"><i class="bi bi-clock"></i> 2:00 PM – 4:00 PM &nbsp; <i class="bi bi-geo-alt"></i> Classroom B</span></div>
-        </div>
-      </div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon orange"><i class="bi bi-cash-coin"></i></div>
+    <div class="stat-content">
+      <h3>৳{{ number_format($totalDue, 0) }}</h3>
+      <p>Outstanding Due</p>
     </div>
   </div>
 </div>
 
+<!-- Examination Results Table -->
+<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:24px;">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+    <h5 style="margin:0;font-weight:700;">Examination &amp; Test Results</h5>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Exam</th>
+          <th>Subject</th>
+          <th>Obtained Marks</th>
+          <th>Total Marks</th>
+          <th>GPA</th>
+          <th>Grade</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($student->results as $res)
+        <tr>
+          <td><strong>{{ $res->exam?->title ?: 'Model Test' }}</strong></td>
+          <td>{{ $res->exam?->subject ?: '-' }}</td>
+          <td><strong>{{ $res->obtained_marks }}</strong></td>
+          <td>{{ $res->total_marks }}</td>
+          <td><strong style="color:var(--primary);">{{ number_format($res->gpa, 2) }}</strong></td>
+          <td><span class="badge badge-success">{{ $res->grade }}</span></td>
+          <td>{{ $res->remarks ?: '-' }}</td>
+        </tr>
+        @empty
+        <tr>
+          <td colspan="7" style="text-align:center;padding:24px;color:var(--gray-500);">No exam results recorded for this student yet.</td>
+        </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
 </div>
-</div>
-<script>
-function switchTab(id){
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.remove('active');});
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  event.target.classList.add('active');
-}
-new Chart(document.getElementById('studentChart'),{type:'radar',data:{labels:['Physics','Chemistry','Math','Biology','English','Bangla'],datasets:[{label:'Score',data:[88,85,92,80,78,82],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.15)',pointBackgroundColor:'#2563eb'}]},options:{responsive:true,scales:{r:{min:60,max:100}}}});
-new Chart(document.getElementById('attChart'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Present',data:[24,22,25,23,24,21,22,23,25],backgroundColor:'rgba(5,150,105,.7)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}}}});
-</script>
-@endsection
 
-@section('scripts')
-<script>
-function switchTab(id){
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.remove('active');});
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  event.target.classList.add('active');
-}
-new Chart(document.getElementById('studentChart'),{type:'radar',data:{labels:['Physics','Chemistry','Math','Biology','English','Bangla'],datasets:[{label:'Score',data:[88,85,92,80,78,82],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.15)',pointBackgroundColor:'#2563eb'}]},options:{responsive:true,scales:{r:{min:60,max:100}}}});
-new Chart(document.getElementById('attChart'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Present',data:[24,22,25,23,24,21,22,23,25],backgroundColor:'rgba(5,150,105,.7)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}}}});
-</script>
+<!-- Fee Payment History Table -->
+<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+    <h5 style="margin:0;font-weight:700;">Fee Invoices &amp; Payment History</h5>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Invoice No</th>
+          <th>Month</th>
+          <th>Payable</th>
+          <th>Paid Amount</th>
+          <th>Due Amount</th>
+          <th>Payment Date</th>
+          <th>Status</th>
+          <th>Receipt</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($student->fees as $fee)
+        <tr>
+          <td><code>{{ $fee->invoice_no }}</code></td>
+          <td><strong>{{ $fee->month }} {{ $fee->year }}</strong></td>
+          <td>৳{{ number_format($fee->amount - $fee->discount, 2) }}</td>
+          <td><strong style="color:var(--success);">৳{{ number_format($fee->paid_amount, 2) }}</strong></td>
+          <td>৳{{ number_format($fee->due_amount, 2) }}</td>
+          <td>{{ $fee->payment_date ? \Carbon\Carbon::parse($fee->payment_date)->format('d M Y') : '-' }}</td>
+          <td><span class="badge {{ $fee->status === 'Paid' ? 'badge-success' : 'badge-danger' }}">{{ $fee->status }}</span></td>
+          <td>
+            <a href="{{ route('admin.invoice', $fee->id) }}" class="btn btn-outline btn-sm"><i class="bi bi-printer"></i> Receipt</a>
+          </td>
+        </tr>
+        @empty
+        <tr>
+          <td colspan="8" style="text-align:center;padding:24px;color:var(--gray-500);">No fee records found for this student.</td>
+        </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+</div>
 @endsection

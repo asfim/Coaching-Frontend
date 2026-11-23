@@ -1,65 +1,367 @@
 @extends('layouts.admin')
 
-@section('title', 'EduManage Pro Admin')
+@section('title', 'Student Management - EduManage Pro Admin')
 
 @section('breadcrumb')
-<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Overview</span>
+<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Students</span>
 @endsection
 
 @section('content')
 <div class="page-header">
-  <div><h2>Student Management</h2><p>Manage all student records, admissions and information</p></div>
-  <button class="btn btn-primary" onclick="document.getElementById('addStudentModal').classList.add('open')"><i class="bi bi-person-plus-fill"></i> Add New Student</button>
+  <div>
+    <h2>Student Management</h2>
+    <p>Manage all student records, admissions, profiles, and academic information</p>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('addStudentModal').style.display='flex'"><i class="bi bi-person-plus-fill"></i> Add New Student</button>
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
-  <div class="stat-card blue"><div class="stat-icon blue"><i class="bi bi-people-fill"></i></div><div class="stat-content"><h3>5,243</h3><p>Total Students</p></div></div>
-  <div class="stat-card green"><div class="stat-icon green"><i class="bi bi-person-check-fill"></i></div><div class="stat-content"><h3>5,012</h3><p>Active</p></div></div>
-  <div class="stat-card orange"><div class="stat-icon orange"><i class="bi bi-person-plus-fill"></i></div><div class="stat-content"><h3>48</h3><p>New This Month</p></div></div>
-  <div class="stat-card red"><div class="stat-icon red"><i class="bi bi-cash-coin"></i></div><div class="stat-content"><h3>৳1.2L</h3><p>Total Due Fees</p></div></div>
+  <div class="stat-card blue">
+    <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $students->total() }}</h3>
+      <p>Total Students</p>
+    </div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon green"><i class="bi bi-person-check-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ \App\Models\Student::where('status', 'Active')->count() }}</h3>
+      <p>Active</p>
+    </div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon orange"><i class="bi bi-person-plus-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ \App\Models\Student::whereMonth('created_at', now()->month)->count() }}</h3>
+      <p>New This Month</p>
+    </div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon red"><i class="bi bi-cash-coin"></i></div>
+    <div class="stat-content">
+      <h3>৳{{ number_format(\App\Models\Fee::sum('due_amount'), 0) }}</h3>
+      <p>Total Due Fees</p>
+    </div>
+  </div>
 </div>
 
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:18px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
-  <div class="input-icon-wrap" style="flex:1;min-width:200px;"><i class="bi bi-search input-icon"></i><input type="text" class="form-control" placeholder="Search by name, ID, phone..."></div>
-  <select class="form-select" style="width:140px;"><option>All Classes</option><option>Class IX</option><option>Class X</option><option>Class XI</option><option>Class XII</option></select>
-  <select class="form-select" style="width:140px;"><option>All Batches</option><option>SSC-A</option><option>SSC-B</option><option>HSC-A</option></select>
-  <select class="form-select" style="width:130px;"><option>All Status</option><option>Active</option><option>Inactive</option></select>
-  <button class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button>
-  <button class="btn btn-outline"><i class="bi bi-download"></i> Export</button>
-</div>
-
-<div class="alert alert-info" style="margin-bottom:16px;"><i class="bi bi-info-circle-fill"></i> Showing 248 students. 3 students have overdue fees. <a href="{{ route('admin.fees') }}" style="color:var(--info);font-weight:600;">View Fee Report &rarr;</a></div>
+<!-- Filters -->
+<form method="GET" action="{{ route('admin.students') }}" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:18px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+  <div class="input-icon-wrap" style="flex:1;min-width:200px;">
+    <i class="bi bi-search input-icon"></i>
+    <input type="text" name="search" class="form-control" placeholder="Search by name, ID, phone..." value="{{ request('search') }}">
+  </div>
+  <select name="class_name" class="form-select" style="width:140px;" onchange="this.form.submit()">
+    <option value="">All Classes</option>
+    <option value="Class IX" {{ request('class_name') == 'Class IX' ? 'selected' : '' }}>Class IX</option>
+    <option value="Class X" {{ request('class_name') == 'Class X' ? 'selected' : '' }}>Class X</option>
+    <option value="Class XI" {{ request('class_name') == 'Class XI' ? 'selected' : '' }}>Class XI</option>
+    <option value="Class XII" {{ request('class_name') == 'Class XII' ? 'selected' : '' }}>Class XII</option>
+  </select>
+  <select name="batch_id" class="form-select" style="width:150px;" onchange="this.form.submit()">
+    <option value="">All Batches</option>
+    @foreach($batches as $b)
+      <option value="{{ $b->id }}" {{ request('batch_id') == $b->id ? 'selected' : '' }}>{{ $b->name }} ({{ $b->batch_code }})</option>
+    @endforeach
+  </select>
+  <select name="status" class="form-select" style="width:130px;" onchange="this.form.submit()">
+    <option value="">All Status</option>
+    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
+    <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+    <option value="Completed" {{ request('status') == 'Completed' ? 'selected' : '' }}>Completed</option>
+  </select>
+  <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button>
+  @if(request()->anyFilled(['search', 'class_name', 'batch_id', 'status']))
+    <a href="{{ route('admin.students') }}" class="btn btn-outline">Reset</a>
+  @endif
+</form>
 
 <div class="table-wrapper">
   <table class="data-table">
-    <thead><tr><th><input type="checkbox" style="width:16px;height:16px;"></th><th>ID</th><th>Name</th><th>Class</th><th>Batch</th><th>Phone</th><th>Guardian</th><th>Admitted</th><th>Fee</th><th>Status</th><th>Actions</th></tr></thead>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Class</th>
+        <th>Batch</th>
+        <th>Phone</th>
+        <th>Guardian</th>
+        <th>Admitted</th>
+        <th>Fee Status</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
     <tbody>
-      <tr><td><input type="checkbox" style="width:16px;height:16px;"></td><td><strong>#STD-2401</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" alt=""><div><strong>Fatima Begum</strong></div></div></td><td>Class X</td><td><span class="badge badge-primary">SSC-A</span></td><td>01712-345678</td><td>Karim Hossain</td><td>27 Sep 2026</td><td><span class="badge badge-success">Paid</span></td><td><span class="badge badge-success">Active</span></td><td><div class="action-btns"><a href="{{ route('admin.students.profile') }}" class="btn btn-primary btn-icon btn-sm" title="View"><i class="bi bi-eye"></i></a><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-icon btn-sm"><i class="bi bi-trash"></i></button></div></td></tr><tr><td><input type="checkbox" style="width:16px;height:16px;"></td><td><strong>#STD-2402</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_male_profile_1790497728356.jpg') }}" alt=""><div><strong>Rakibul Hasan</strong></div></div></td><td>Class XI</td><td><span class="badge badge-secondary">HSC-B</span></td><td>01813-456789</td><td>Jamal Hasan</td><td>25 Sep 2026</td><td><span class="badge badge-warning">Partial</span></td><td><span class="badge badge-success">Active</span></td><td><div class="action-btns"><a href="{{ route('admin.students.profile') }}" class="btn btn-primary btn-icon btn-sm" title="View"><i class="bi bi-eye"></i></a><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-icon btn-sm"><i class="bi bi-trash"></i></button></div></td></tr><tr><td><input type="checkbox" style="width:16px;height:16px;"></td><td><strong>#STD-2403</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" alt=""><div><strong>Sumaiya Islam</strong></div></div></td><td>Class IX</td><td><span class="badge badge-success">SSC-C</span></td><td>01914-567890</td><td>Rahim Islam</td><td>22 Sep 2026</td><td><span class="badge badge-danger">Due</span></td><td><span class="badge badge-warning">Pending</span></td><td><div class="action-btns"><a href="{{ route('admin.students.profile') }}" class="btn btn-primary btn-icon btn-sm" title="View"><i class="bi bi-eye"></i></a><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-icon btn-sm"><i class="bi bi-trash"></i></button></div></td></tr><tr><td><input type="checkbox" style="width:16px;height:16px;"></td><td><strong>#STD-2404</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_male_profile_1790497728356.jpg') }}" alt=""><div><strong>Mahbub Rahman</strong></div></div></td><td>Class XII</td><td><span class="badge badge-info">HSC-A</span></td><td>01615-678901</td><td>Anwar Rahman</td><td>20 Sep 2026</td><td><span class="badge badge-success">Paid</span></td><td><span class="badge badge-success">Active</span></td><td><div class="action-btns"><a href="{{ route('admin.students.profile') }}" class="btn btn-primary btn-icon btn-sm" title="View"><i class="bi bi-eye"></i></a><button class="btn btn-outline btn-icon btn-sm"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-icon btn-sm"><i class="bi bi-trash"></i></button></div></td></tr>
+      @forelse($students as $st)
+      <tr>
+        <td><strong>#{{ $st->student_id }}</strong></td>
+        <td>
+          <div class="avatar-cell">
+            <img src="{{ asset($st->avatar ?: 'images/student_female_profile_1790497748277.jpg') }}" alt="{{ $st->name }}">
+            <div>
+              <strong>{{ $st->name }}</strong>
+              @if($st->email)
+                <div style="font-size:0.75rem;color:var(--gray-500);">{{ $st->email }}</div>
+              @endif
+            </div>
+          </div>
+        </td>
+        <td>{{ $st->class_name }}</td>
+        <td>
+          @if($st->batch)
+            <span class="badge badge-primary">{{ $st->batch->batch_code }}</span>
+          @else
+            <span class="badge badge-secondary">None</span>
+          @endif
+        </td>
+        <td>{{ $st->phone }}</td>
+        <td>{{ $st->guardian_name ?: '-' }}</td>
+        <td>{{ $st->admission_date ? \Carbon\Carbon::parse($st->admission_date)->format('d M Y') : '-' }}</td>
+        <td>
+          @php $due = $st->fees->sum('due_amount'); @endphp
+          @if($due > 0)
+            <span class="badge badge-danger">Due: ৳{{ number_format($due, 0) }}</span>
+          @else
+            <span class="badge badge-success">Clear</span>
+          @endif
+        </td>
+        <td>
+          <span class="badge {{ $st->status === 'Active' ? 'badge-success' : 'badge-warning' }}">{{ $st->status }}</span>
+        </td>
+        <td>
+          <div class="action-btns">
+            <a href="{{ route('admin.students.profile', $st->id) }}" class="btn btn-primary btn-icon btn-sm" title="View Profile">
+              <i class="bi bi-eye"></i>
+            </a>
+            <button class="btn btn-outline btn-icon btn-sm" onclick='openEditStudentModal(@json($st))' title="Edit">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <form action="{{ route('admin.students.destroy', $st->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this student record?');" style="display:inline;">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      @empty
+      <tr>
+        <td colspan="10" style="text-align:center;padding:30px;color:var(--gray-500);">
+          No students found matching your criteria.
+        </td>
+      </tr>
+      @endforelse
     </tbody>
   </table>
 </div>
 
-<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:12px;">
-  <span style="font-size:.85rem;color:var(--gray-500);">Showing 1–10 of 248 students</span>
-  <div style="display:flex;gap:6px;"><div class="page-item disabled"><i class="bi bi-chevron-left"></i></div><div class="page-item active">1</div><div class="page-item">2</div><div class="page-item">3</div><div class="page-item"><i class="bi bi-chevron-right"></i></div></div>
-</div>
+@if($students->hasPages())
+  <div style="margin-top:16px;">
+    {{ $students->links() }}
+  </div>
+@endif
 
-<div class="modal-overlay" id="addStudentModal">
-  <div class="modal-box">
-    <div class="modal-header"><h5><i class="bi bi-person-plus-fill" style="color:var(--primary);"></i> Add New Student</h5><div class="modal-close" onclick="document.getElementById('addStudentModal').classList.remove('open')"><i class="bi bi-x-lg"></i></div></div>
-    <div class="modal-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group"><label class="form-label">First Name *</label><input class="form-control" type="text" placeholder="Enter first name"></div>
-        <div class="form-group"><label class="form-label">Last Name *</label><input class="form-control" type="text" placeholder="Enter last name"></div>
-        <div class="form-group"><label class="form-label">Phone *</label><input class="form-control" type="tel" placeholder="01700-000000"></div>
-        <div class="form-group"><label class="form-label">Guardian Name *</label><input class="form-control" type="text" placeholder="Parent/Guardian name"></div>
-        <div class="form-group"><label class="form-label">Class *</label><select class="form-select"><option>Select Class</option><option>Class IX</option><option>Class X</option><option>Class XI</option><option>Class XII</option></select></div>
-        <div class="form-group"><label class="form-label">Batch *</label><select class="form-select"><option>Select Batch</option><option>SSC-A</option><option>SSC-B</option><option>HSC-A</option></select></div>
-      </div>
-      <div class="form-group"><label class="form-label">Address</label><input class="form-control" type="text" placeholder="Full address"></div>
+<!-- Add Student Modal -->
+<div id="addStudentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:620px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <h4 style="margin:0;font-weight:700;"><i class="bi bi-person-plus-fill" style="color:var(--primary);"></i> Add New Student</h4>
+      <button onclick="document.getElementById('addStudentModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="document.getElementById('addStudentModal').classList.remove('open')">Cancel</button><button class="btn btn-primary"><i class="bi bi-check-circle"></i> Add Student</button></div>
+    <form action="{{ route('admin.students.store') }}" method="POST">
+      @csrf
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Full Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Fatima Begum" required>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Phone *</label>
+          <input type="text" name="phone" class="form-control" placeholder="01700-000000" required>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Email</label>
+          <input type="email" name="email" class="form-control" placeholder="student@example.com">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Blood Group</label>
+          <select name="blood_group" class="form-select">
+            <option value="">Select Blood Group</option>
+            <option value="A+">A+</option><option value="A-">A-</option>
+            <option value="B+">B+</option><option value="B-">B-</option>
+            <option value="O+">O+</option><option value="O-">O-</option>
+            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Guardian Name</label>
+          <input type="text" name="guardian_name" class="form-control" placeholder="Father or Mother's Name">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Guardian Phone</label>
+          <input type="text" name="guardian_phone" class="form-control" placeholder="Guardian Phone No">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class *</label>
+          <select name="class_name" class="form-select" required>
+            <option value="Class IX">Class IX</option>
+            <option value="Class X" selected>Class X</option>
+            <option value="Class XI">Class XI</option>
+            <option value="Class XII">Class XII</option>
+            <option value="Admission">University Admission</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Batch</label>
+          <select name="batch_id" class="form-select">
+            <option value="">Select Batch</option>
+            @foreach($batches as $b)
+              <option value="{{ $b->id }}">{{ $b->name }} ({{ $b->batch_code }})</option>
+            @endforeach
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Course</label>
+          <select name="course_id" class="form-select">
+            <option value="">Select Course</option>
+            @foreach($courses as $c)
+              <option value="{{ $c->id }}">{{ $c->title }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Status *</label>
+          <select name="status" class="form-select" required>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
+        <textarea name="address" class="form-control" rows="2" placeholder="Residential address"></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('addStudentModal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Student</button>
+      </div>
+    </form>
   </div>
 </div>
-@endsection
 
+<!-- Edit Student Modal -->
+<div id="editStudentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:620px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <h4 style="margin:0;font-weight:700;"><i class="bi bi-pencil-square" style="color:var(--primary);"></i> Edit Student</h4>
+      <button onclick="document.getElementById('editStudentModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <form id="editStudentForm" method="POST">
+      @csrf
+      @method('PUT')
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Full Name *</label>
+          <input type="text" name="name" id="editStudentName" class="form-control" required>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Phone *</label>
+          <input type="text" name="phone" id="editStudentPhone" class="form-control" required>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Email</label>
+          <input type="email" name="email" id="editStudentEmail" class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class *</label>
+          <select name="class_name" id="editStudentClass" class="form-select" required>
+            <option value="Class IX">Class IX</option>
+            <option value="Class X">Class X</option>
+            <option value="Class XI">Class XI</option>
+            <option value="Class XII">Class XII</option>
+            <option value="Admission">University Admission</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Guardian Name</label>
+          <input type="text" name="guardian_name" id="editStudentGuardian" class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Guardian Phone</label>
+          <input type="text" name="guardian_phone" id="editStudentGuardianPhone" class="form-control">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Batch</label>
+          <select name="batch_id" id="editStudentBatch" class="form-select">
+            <option value="">Select Batch</option>
+            @foreach($batches as $b)
+              <option value="{{ $b->id }}">{{ $b->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Status *</label>
+          <select name="status" id="editStudentStatus" class="form-select" required>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
+        <textarea name="address" id="editStudentAddress" class="form-control" rows="2"></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('editStudentModal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Update Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEditStudentModal(st) {
+  document.getElementById('editStudentModal').style.display = 'flex';
+  document.getElementById('editStudentForm').action = '/admin/students/' + st.id;
+  document.getElementById('editStudentName').value = st.name || '';
+  document.getElementById('editStudentPhone').value = st.phone || '';
+  document.getElementById('editStudentEmail').value = st.email || '';
+  document.getElementById('editStudentClass').value = st.class_name || 'Class X';
+  document.getElementById('editStudentGuardian').value = st.guardian_name || '';
+  document.getElementById('editStudentGuardianPhone').value = st.guardian_phone || '';
+  document.getElementById('editStudentBatch').value = st.batch_id || '';
+  document.getElementById('editStudentStatus').value = st.status || 'Active';
+  document.getElementById('editStudentAddress').value = st.address || '';
+}
+</script>
+@endsection

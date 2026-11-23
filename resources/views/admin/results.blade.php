@@ -1,75 +1,139 @@
 @extends('layouts.admin')
 
-@section('title', 'EduManage Pro Admin')
+@section('title', 'Exam Results Management - EduManage Pro Admin')
 
 @section('breadcrumb')
-<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>result management</span>
+<a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Results</span>
 @endsection
 
 @section('content')
-<div class="page-header"><div><h2>Result Management</h2><p>View, publish and manage student exam results</p></div>
-<button class="btn btn-primary"><i class="bi bi-upload"></i> Publish Result</button></div>
-
-<!-- Search -->
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:20px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
-  <div class="input-icon-wrap" style="flex:1;min-width:200px;"><i class="bi bi-search input-icon"></i><input type="text" class="form-control" placeholder="Search by student name or ID..."></div>
-  <select class="form-select" style="width:140px;"><option>All Classes</option><option>Class X</option><option>Class XI</option><option>Class XII</option></select>
-  <select class="form-select" style="width:140px;"><option>All Batches</option><option>SSC-A</option><option>HSC-A</option></select>
-  <select class="form-select" style="width:160px;"><option>All Exams</option><option>SSC Model Test</option><option>Monthly Test</option></select>
-  <button class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+<div class="page-header">
+  <div>
+    <h2>Result Management</h2>
+    <p>Record exam marks, auto-calculate GPA, publish student mark sheets</p>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('addResultModal').style.display='flex'"><i class="bi bi-plus-circle"></i> Add / Enter Marks</button>
 </div>
 
-<!-- Summary -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;">
-  <div class="stat-card green"><div class="stat-icon green"><i class="bi bi-trophy-fill"></i></div><div class="stat-content"><h3>1,248</h3><p>GPA 5.0</p></div></div>
-  <div class="stat-card blue"><div class="stat-icon blue"><i class="bi bi-star-fill"></i></div><div class="stat-content"><h3>2,100</h3><p>GPA 4+</p></div></div>
-  <div class="stat-card yellow"><div class="stat-icon yellow"><i class="bi bi-check-circle-fill"></i></div><div class="stat-content"><h3>1,400</h3><p>GPA 3+</p></div></div>
-  <div class="stat-card red"><div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div><div class="stat-content"><h3>145</h3><p>Failed</p></div></div>
+<!-- Results Table -->
+<div class="table-wrapper" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:24px;">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+    <h5 style="margin:0;font-weight:700;">Student Examination Results</h5>
+    <span style="font-size:0.85rem;color:var(--gray-500);">Total Results: {{ $results->total() }}</span>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Exam</th>
+        <th>Subject</th>
+        <th>Obtained / Total</th>
+        <th>Percentage</th>
+        <th>GPA</th>
+        <th>Grade</th>
+        <th>Remarks</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($results as $r)
+      @php
+        $pct = $r->total_marks > 0 ? round(($r->obtained_marks / $r->total_marks) * 100) : 0;
+      @endphp
+      <tr>
+        <td>
+          <div class="avatar-cell">
+            <img src="{{ asset($r->student?->avatar ?: 'images/student_female_profile_1790497748277.jpg') }}" alt="">
+            <div>
+              <strong>{{ $r->student?->name ?: 'N/A' }}</strong>
+              <small style="color:var(--gray-500);">#{{ $r->student?->student_id }}</small>
+            </div>
+          </div>
+        </td>
+        <td>{{ $r->exam?->title ?: 'General Exam' }}</td>
+        <td><strong>{{ $r->exam?->subject ?: '-' }}</strong></td>
+        <td>{{ $r->obtained_marks }} / {{ $r->total_marks }}</td>
+        <td>{{ $pct }}%</td>
+        <td><strong style="color:var(--primary);">{{ number_format($r->gpa, 2) }}</strong></td>
+        <td>
+          <span class="badge {{ $r->grade === 'A+' ? 'badge-success' : ($r->grade === 'F' ? 'badge-danger' : 'badge-primary') }}">
+            {{ $r->grade }}
+          </span>
+        </td>
+        <td>{{ $r->remarks ?: '-' }}</td>
+        <td>
+          <form action="{{ route('admin.results.destroy', $r->id) }}" method="POST" onsubmit="return confirm('Delete this result?');" style="display:inline;">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      @empty
+      <tr>
+        <td colspan="9" style="text-align:center;padding:30px;color:var(--gray-500);">
+          No exam results recorded yet. Click "Add / Enter Marks" to record marks.
+        </td>
+      </tr>
+      @endforelse
+    </tbody>
+  </table>
 </div>
 
-<!-- Chart -->
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-  <div><h5 style="font-weight:700;margin-bottom:16px;">GPA Distribution</h5><canvas id="gpaChart" height="160"></canvas></div>
-  <div><h5 style="font-weight:700;margin-bottom:16px;">Subject Performance Average</h5><canvas id="subjectChart" height="160"></canvas></div>
-</div>
+@if($results->hasPages())
+  <div>{{ $results->links() }}</div>
+@endif
 
-<!-- Student Result Card -->
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:20px;">
-  <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
-    <img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--primary-light);">
-    <div style="flex:1;"><h4 style="margin-bottom:4px;">Fatima Begum</h4><p style="font-size:.85rem;margin:0;color:var(--gray-500);">#STD-2401 &nbsp;|&nbsp; Class X — SSC Batch A &nbsp;|&nbsp; Roll: 05</p></div>
-    <div style="text-align:center;background:var(--success-light);border-radius:var(--radius-lg);padding:16px 24px;">
-      <h3 style="color:var(--success);font-size:2rem;margin-bottom:4px;">4.83</h3><p style="font-size:.8rem;color:var(--success);font-weight:600;margin:0;">GPA — Grade A+</p>
+<!-- Add Result Modal -->
+<div id="addResultModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:520px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <h4 style="margin:0;font-weight:700;"><i class="bi bi-trophy" style="color:var(--primary);"></i> Enter Marks</h4>
+      <button onclick="document.getElementById('addResultModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
     </div>
-    <div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Print</button><button class="btn btn-outline btn-sm"><i class="bi bi-download"></i> PDF</button></div>
-  </div>
-  <div class="table-wrapper">
-    <table class="data-table">
-      <thead><tr><th>Subject</th><th>Full Marks</th><th>Obtained</th><th>Grade</th><th>Points</th><th>Remarks</th></tr></thead>
-      <tbody>
-        <tr><td>Physics</td><td>100</td><td>88</td><td>A+</td><td>5.0</td><td><span class="badge badge-success">Excellent</span></td></tr>
-        <tr><td>Chemistry</td><td>100</td><td>85</td><td>A+</td><td>5.0</td><td><span class="badge badge-success">Excellent</span></td></tr>
-        <tr><td>Mathematics</td><td>100</td><td>92</td><td>A+</td><td>5.0</td><td><span class="badge badge-success">Excellent</span></td></tr>
-        <tr><td>Biology</td><td>100</td><td>80</td><td>A</td><td>4.0</td><td><span class="badge badge-primary">Good</span></td></tr>
-        <tr><td>English (1st)</td><td>100</td><td>78</td><td>A</td><td>4.0</td><td><span class="badge badge-primary">Good</span></td></tr>
-        <tr><td>Bangla (1st)</td><td>100</td><td>82</td><td>A+</td><td>5.0</td><td><span class="badge badge-success">Excellent</span></td></tr>
-        <tr style="background:var(--primary-light);"><td><strong>Total</strong></td><td><strong>600</strong></td><td><strong>505</strong></td><td><strong>A+</strong></td><td><strong>4.83</strong></td><td><span class="badge badge-primary">Distinction</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+    <form action="{{ route('admin.results.store') }}" method="POST">
+      @csrf
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Select Exam *</label>
+        <select name="exam_id" class="form-select" required>
+          @foreach($exams as $e)
+            <option value="{{ $e->id }}">{{ $e->title }} ({{ $e->subject }})</option>
+          @endforeach
+        </select>
+      </div>
 
-</div>
-</div>
-<script>
-new Chart(document.getElementById('gpaChart'),{type:'doughnut',data:{labels:['GPA 5.0','GPA 4-5','GPA 3-4','GPA 2-3','Failed'],datasets:[{data:[1248,2100,1400,350,145],backgroundColor:['#059669','#2563eb','#d97706','#ea580c','#dc2626'],borderWidth:0}]},options:{cutout:'60%',plugins:{legend:{position:'bottom'}}}});
-new Chart(document.getElementById('subjectChart'),{type:'bar',data:{labels:['Physics','Chem','Math','Bio','English','Bangla'],datasets:[{label:'Avg Score',data:[78,81,85,76,74,79],backgroundColor:['#eff6ff','#f0fdf4','#f5f3ff','#fff7ed','#ecfeff','#fdf4ff'].map((c,i)=>['#2563eb','#059669','#7c3aed','#ea580c','#0891b2','#db2777'][i]),borderRadius:6}]},options:{responsive:true,scales:{y:{min:60,max:100}},plugins:{legend:{display:false}}}});
-</script>
-@endsection
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Select Student *</label>
+        <select name="student_id" class="form-select" required>
+          @foreach($students as $st)
+            <option value="{{ $st->id }}">{{ $st->student_id }} - {{ $st->name }} ({{ $st->class_name }})</option>
+          @endforeach
+        </select>
+      </div>
 
-@section('scripts')
-<script>
-new Chart(document.getElementById('gpaChart'),{type:'doughnut',data:{labels:['GPA 5.0','GPA 4-5','GPA 3-4','GPA 2-3','Failed'],datasets:[{data:[1248,2100,1400,350,145],backgroundColor:['#059669','#2563eb','#d97706','#ea580c','#dc2626'],borderWidth:0}]},options:{cutout:'60%',plugins:{legend:{position:'bottom'}}}});
-new Chart(document.getElementById('subjectChart'),{type:'bar',data:{labels:['Physics','Chem','Math','Bio','English','Bangla'],datasets:[{label:'Avg Score',data:[78,81,85,76,74,79],backgroundColor:['#eff6ff','#f0fdf4','#f5f3ff','#fff7ed','#ecfeff','#fdf4ff'].map((c,i)=>['#2563eb','#059669','#7c3aed','#ea580c','#0891b2','#db2777'][i]),borderRadius:6}]},options:{responsive:true,scales:{y:{min:60,max:100}},plugins:{legend:{display:false}}}});
-</script>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Obtained Marks *</label>
+          <input type="number" step="0.01" name="obtained_marks" class="form-control" placeholder="e.g. 85" required>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Total Marks *</label>
+          <input type="number" step="0.01" name="total_marks" class="form-control" value="100" required>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Remarks / Feedback</label>
+        <input type="text" name="remarks" class="form-control" placeholder="e.g. Excellent math skills">
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('addResultModal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Result</button>
+      </div>
+    </form>
+  </div>
+</div>
 @endsection

@@ -1,93 +1,48 @@
 @extends('layouts.public')
 
-@section('title', 'Teachers - EduManage Pro')
+@section('title', 'Faculty & Expert Teachers - EduManage Pro')
 
-@section('styles')
-<style>
-.container{max-width:1320px;margin:0 auto;padding:0 24px;}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}@media(max-width:576px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
-</style>
-@endsection
 @section('content')
-<div class="page-banner"><div class="container"><h1>Our Expert Teachers</h1><p>Meet the dedicated faculty driving student success</p><div class="breadcrumb"><a href="{{ route('home') }}">Home</a><span>/</span><span>Teachers</span></div></div></div>
-
-<section class="section-padding">
-  <div class="container">
-    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:32px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-      <div class="input-icon-wrap" style="flex:1;min-width:200px;"><i class="bi bi-search input-icon"></i><input type="text" class="form-control" placeholder="Search teachers..."></div>
-      <select class="form-select" style="width:160px;"><option>All Subjects</option><option>Physics</option><option>Math</option><option>Chemistry</option></select>
-      <button class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
-      <div class="teacher-card">
-        <div class="teacher-img-wrap"><img src="{{ asset('images/teacher_female_1_1790497081063.jpg') }}" alt="Nasrin Sultana"></div>
-        <div class="card-body">
-          <h5>Nasrin Sultana</h5><div class="subject">Bangladesh Studies & History</div><div class="qual">M.A. History, University of Dhaka</div>
-          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
-            <span><i class="bi bi-people" style="color:var(--primary);"></i> 85</span>
-            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.9</span>
-            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 12 Yrs</span>
-          </div>
-          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
-        </div>
-      </div><div class="teacher-card">
-        <div class="teacher-img-wrap"><img src="{{ asset('images/teacher_male_1_1790497096029.jpg') }}" alt="Md. Rafiqul Islam"></div>
-        <div class="card-body">
-          <h5>Md. Rafiqul Islam</h5><div class="subject">Physics & Mathematics</div><div class="qual">M.Sc. Physics, BUET</div>
-          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
-            <span><i class="bi bi-people" style="color:var(--primary);"></i> 120</span>
-            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.8</span>
-            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 8 Yrs</span>
-          </div>
-          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
-        </div>
-      </div><div class="teacher-card">
-        <div class="teacher-img-wrap"><img src="{{ asset('images/teacher_male_2_1790497121228.jpg') }}" alt="Prof. Abdul Karim"></div>
-        <div class="card-body">
-          <h5>Prof. Abdul Karim</h5><div class="subject">Higher Mathematics</div><div class="qual">Ph.D. Mathematics, DU</div>
-          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
-            <span><i class="bi bi-people" style="color:var(--primary);"></i> 200</span>
-            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 5.0</span>
-            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 18 Yrs</span>
-          </div>
-          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
-        </div>
-      </div><div class="teacher-card">
-        <div class="teacher-img-wrap"><img src="{{ asset('images/teacher_female_2_1790497140028.jpg') }}" alt="Farhana Akter"></div>
-        <div class="card-body">
-          <h5>Farhana Akter</h5><div class="subject">Chemistry & Biology</div><div class="qual">M.Sc. Chemistry, RU</div>
-          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
-            <span><i class="bi bi-people" style="color:var(--primary);"></i> 95</span>
-            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.9</span>
-            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 6 Yrs</span>
-          </div>
-          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
-        </div>
-      </div><div class="teacher-card">
-        <div class="teacher-img-wrap"><img src="{{ asset('images/teacher_male_1_1790497096029.jpg') }}" alt="Sohel Rana"></div>
-        <div class="card-body">
-          <h5>Sohel Rana</h5><div class="subject">English Language</div><div class="qual">M.A. English Literature, DU</div>
-          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
-            <span><i class="bi bi-people" style="color:var(--primary);"></i> 75</span>
-            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.7</span>
-            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 5 Yrs</span>
-          </div>
-          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
-        </div>
-      </div><div class="teacher-card">
-        <div class="teacher-img-wrap"><img src="{{ asset('images/teacher_female_1_1790497081063.jpg') }}" alt="Tahmina Khanam"></div>
-        <div class="card-body">
-          <h5>Tahmina Khanam</h5><div class="subject">Accounting & Commerce</div><div class="qual">M.Com, Chittagong University</div>
-          <div style="display:flex;justify-content:center;gap:16px;margin:12px 0;font-size:.8rem;color:var(--gray-500);">
-            <span><i class="bi bi-people" style="color:var(--primary);"></i> 60</span>
-            <span><i class="bi bi-star-fill" style="color:#fbbf24;"></i> 4.8</span>
-            <span><i class="bi bi-calendar" style="color:var(--success);"></i> 9 Yrs</span>
-          </div>
-          <div class="teacher-social"><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-envelope"></i></a></div>
-        </div>
-      </div>
-    </div>
+<section style="background:linear-gradient(135deg,var(--primary-light),var(--secondary-light));padding:48px 0 36px;border-bottom:1px solid var(--border);">
+  <div class="container text-center">
+    <span class="badge badge-primary" style="margin-bottom:10px;padding:6px 16px;border-radius:50px;">Faculty Members</span>
+    <h1 style="margin-bottom:10px;font-weight:800;">Our Expert Teachers</h1>
+    <p style="font-size:1.05rem;color:var(--gray-600);max-width:600px;margin:0 auto;">
+      Learn from Bangladesh's top university graduates (BUET, DU, DMC) with years of dedicated coaching excellence.
+    </p>
   </div>
 </section>
 
-<section class="cta-section"><div class="container"><h2 style="margin-bottom:14px;">Join Our Faculty Team</h2><p>We are always looking for passionate educators to join EduManage Pro.</p><div class="cta-actions"><a href="{{ route('contact') }}" class="btn btn-white btn-lg"><i class="bi bi-person-plus"></i> Apply Now</a></div></div></section>
+<section class="section-padding">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:28px;">
+      @forelse($teachers as $t)
+      <div class="teacher-card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);text-align:center;">
+        <div class="teacher-img-wrap" style="height:220px;overflow:hidden;background:var(--gray-100);">
+          <img src="{{ asset($t->image ?: 'images/teacher_male_1_1790497096029.jpg') }}" alt="{{ $t->name }}" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <div class="card-body" style="padding:20px;">
+          <h5 style="margin-bottom:4px;font-weight:700;">{{ $t->name }}</h5>
+          <div class="subject" style="color:var(--primary);font-weight:600;font-size:0.9rem;margin-bottom:4px;">{{ $t->subject }}</div>
+          <div class="qual" style="font-size:0.8rem;color:var(--gray-500);margin-bottom:12px;">{{ $t->qualification }}</div>
+          <div class="teacher-social" style="display:flex;justify-content:center;gap:12px;">
+            <a href="{{ $t->facebook ?: '#' }}" style="color:var(--gray-600);font-size:1.1rem;"><i class="bi bi-facebook"></i></a>
+            <a href="{{ $t->linkedin ?: '#' }}" style="color:var(--gray-600);font-size:1.1rem;"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+      @empty
+      <div style="grid-column:1/-1;text-align:center;padding:40px;">
+        <p style="color:var(--gray-500);">No faculty members listed at this time.</p>
+      </div>
+      @endforelse
+    </div>
+
+    @if($teachers->hasPages())
+      <div style="margin-top:36px;display:flex;justify-content:center;">
+        {{ $teachers->links() }}
+      </div>
+    @endif
+  </div>
+</section>
 @endsection

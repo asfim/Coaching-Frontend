@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Batch;
+use App\Models\Course;
+use Illuminate\Http\Request;
+
+class BatchController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Batch::with(['course'])->withCount('students')->latest();
+
+        if ($request->filled('class_name')) {
+            $query->where('class_name', $request->class_name);
+        }
+
+        $batches = $query->paginate(12);
+        $courses = Course::all();
+
+        return view('admin.batches', compact('batches', 'courses'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'batch_code' => 'required|string|max:50|unique:batches,batch_code',
+            'class_name' => 'required|string|max:100',
+            'course_id' => 'nullable|exists:courses,id',
+            'days' => 'required|string|max:100',
+            'time_slot' => 'required|string|max:100',
+            'room' => 'required|string|max:50',
+            'max_students' => 'required|integer|min:1',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+        Batch::create($validated);
+
+        return redirect()->route('admin.batches')->with('success', 'Batch created successfully!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $batch = Batch::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'batch_code' => 'required|string|max:50|unique:batches,batch_code,' . $id,
+            'class_name' => 'required|string|max:100',
+            'course_id' => 'nullable|exists:courses,id',
+            'days' => 'required|string|max:100',
+            'time_slot' => 'required|string|max:100',
+            'room' => 'required|string|max:50',
+            'max_students' => 'required|integer|min:1',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+        $batch->update($validated);
+
+        return redirect()->route('admin.batches')->with('success', 'Batch updated successfully!');
+    }
+
+    public function destroy($id)
+    {
+        $batch = Batch::findOrFail($id);
+        $batch->delete();
+
+        return redirect()->route('admin.batches')->with('success', 'Batch deleted successfully!');
+    }
+}

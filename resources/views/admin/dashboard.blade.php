@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'EduManage Pro Admin')
+@section('title', 'Admin Dashboard - EduManage Pro')
 
 @section('breadcrumb')
 <a href="{{ route('admin.dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Overview</span>
@@ -8,120 +8,208 @@
 
 @section('content')
 <div class="page-header">
-  <div><h2>Admin Dashboard</h2><p>Welcome back! Here's your coaching center at a glance.</p></div>
+  <div>
+    <h2>Admin Dashboard</h2>
+    <p>Welcome back! Real-time statistics, attendance, fee collections, and active batches.</p>
+  </div>
   <div style="display:flex;gap:10px;">
     <a href="{{ route('admin.students') }}" class="btn btn-outline btn-sm"><i class="bi bi-person-plus"></i> New Student</a>
-    <a href="{{ route('admin.reports') }}" class="btn btn-primary btn-sm"><i class="bi bi-download"></i> Export Report</a>
+    <a href="{{ route('admin.accounts.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-wallet2"></i> Accounts</a>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
-  <div class="stat-card blue"><div class="stat-icon blue"><i class="bi bi-people-fill"></i></div><div class="stat-content"><h3>5,243</h3><p>Total Students</p></div><span class="stat-badge up">+12% ↑</span></div>
-  <div class="stat-card purple"><div class="stat-icon purple"><i class="bi bi-person-badge-fill"></i></div><div class="stat-content"><h3>48</h3><p>Total Teachers</p></div><span class="stat-badge up">+3 New</span></div>
-  <div class="stat-card green"><div class="stat-icon green"><i class="bi bi-journal-bookmark-fill"></i></div><div class="stat-content"><h3>24</h3><p>Active Courses</p></div><span class="stat-badge up">+2 ↑</span></div>
-  <div class="stat-card orange"><div class="stat-icon orange"><i class="bi bi-collection-fill"></i></div><div class="stat-content"><h3>36</h3><p>Batches</p></div><span class="stat-badge up">Active</span></div>
-  <div class="stat-card cyan"><div class="stat-icon cyan"><i class="bi bi-calendar2-check-fill"></i></div><div class="stat-content"><h3>92%</h3><p>Today's Attendance</p></div><span class="stat-badge up">Good</span></div>
-  <div class="stat-card yellow"><div class="stat-icon yellow"><i class="bi bi-cash-stack"></i></div><div class="stat-content"><h3>৳4.2L</h3><p>Monthly Collection</p></div><span class="stat-badge up">+8% ↑</span></div>
+<!-- Stat Cards -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+  <div class="stat-card blue">
+    <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $totalStudents }}</h3>
+      <p>Total Students</p>
+    </div>
+    <span class="stat-badge up">Enrolled</span>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-icon purple"><i class="bi bi-person-badge-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $totalTeachers }}</h3>
+      <p>Faculty Members</p>
+    </div>
+    <span class="stat-badge up">Active</span>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon green"><i class="bi bi-journal-bookmark-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $totalCourses }}</h3>
+      <p>Active Courses</p>
+    </div>
+    <span class="stat-badge up">Offered</span>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon orange"><i class="bi bi-collection-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $totalBatches }}</h3>
+      <p>Running Batches</p>
+    </div>
+    <span class="stat-badge up">Scheduled</span>
+  </div>
+  <div class="stat-card cyan">
+    <div class="stat-icon cyan"><i class="bi bi-calendar2-check-fill"></i></div>
+    <div class="stat-content">
+      <h3>{{ $attendanceRate }}%</h3>
+      <p>Today's Attendance</p>
+    </div>
+    <span class="stat-badge up">Live</span>
+  </div>
+  <div class="stat-card yellow">
+    <div class="stat-icon yellow"><i class="bi bi-cash-stack"></i></div>
+    <div class="stat-content">
+      <h3>৳{{ number_format($monthlyCollection, 0) }}</h3>
+      <p>Monthly Fees</p>
+    </div>
+    <span class="stat-badge up">{{ now()->format('M Y') }}</span>
+  </div>
 </div>
 
+<!-- Charts Row -->
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px;">
   <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><div><h5 style="font-weight:700;margin-bottom:2px;">Monthly Fee Collection</h5><p style="font-size:.8rem;margin:0;color:var(--gray-500);">January – September 2026</p></div><select class="form-select" style="width:130px;font-size:.8rem;"><option>This Year</option></select></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div>
+        <h5 style="font-weight:700;margin-bottom:2px;">Monthly Fee &amp; Income Collection</h5>
+        <p style="font-size:.8rem;margin:0;color:var(--gray-500);">Financial performance overview</p>
+      </div>
+      <a href="{{ route('admin.accounts.index') }}" class="btn btn-outline btn-sm">View Accounts</a>
+    </div>
     <canvas id="feesChart" height="100"></canvas>
   </div>
   <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-    <div style="margin-bottom:16px;"><h5 style="font-weight:700;margin-bottom:2px;">Attendance Overview</h5><p style="font-size:.8rem;margin:0;color:var(--gray-500);">Today's Summary</p></div>
+    <div style="margin-bottom:16px;">
+      <h5 style="font-weight:700;margin-bottom:2px;">Attendance Overview</h5>
+      <p style="font-size:.8rem;margin:0;color:var(--gray-500);">Today's Summary</p>
+    </div>
     <canvas id="attendanceChart" height="160"></canvas>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
-      <div style="background:var(--success-light);border-radius:var(--radius);padding:10px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--success);">4,823</div><div style="font-size:.72rem;color:var(--success);">Present</div></div>
-      <div style="background:var(--danger-light);border-radius:var(--radius);padding:10px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--danger);">420</div><div style="font-size:.72rem;color:var(--danger);">Absent</div></div>
-    </div>
-  </div>
-</div>
-
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-    <h5 style="font-weight:700;margin-bottom:16px;">Student Enrollment Growth</h5>
-    <canvas id="growthChart" height="140"></canvas>
-  </div>
-  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-    <h5 style="font-weight:700;margin-bottom:2px;">Exam Performance</h5><p style="font-size:.8rem;margin:0 0 16px;color:var(--gray-500);">GPA Distribution</p>
-    <canvas id="examChart" height="140"></canvas>
-  </div>
-</div>
-
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h5 style="font-weight:700;font-size:1rem;margin:0;">Recent Activities</h5><a href="#" style="font-size:.8rem;color:var(--primary);">View All</a></div>
-    <div style="display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100);">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--success-light,var(--primary-light));color:var(--success,var(--primary));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;"><i class="bi bi-person-plus-fill"></i></div>
-        <div><strong style="display:block;font-size:.85rem;font-weight:600;">New Student Admission</strong><span style="font-size:.75rem;color:var(--gray-500);">Fatima Begum admitted to SSC Batch A — 10 min ago</span></div>
-      </div><div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100);">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--primary-light,var(--primary-light));color:var(--primary,var(--primary));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;"><i class="bi bi-cash-coin"></i></div>
-        <div><strong style="display:block;font-size:.85rem;font-weight:600;">Fee Payment Received</strong><span style="font-size:.75rem;color:var(--gray-500);">Rakib Hassan paid ৳2,500 for October — 25 min ago</span></div>
-      </div><div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100);">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--orange-light,var(--primary-light));color:var(--orange,var(--primary));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;"><i class="bi bi-trophy-fill"></i></div>
-        <div><strong style="display:block;font-size:.85rem;font-weight:600;">Result Published</strong><span style="font-size:.75rem;color:var(--gray-500);">SSC Model Test results published — 1 hr ago</span></div>
-      </div><div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100);">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--secondary-light,var(--primary-light));color:var(--secondary,var(--primary));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;"><i class="bi bi-megaphone-fill"></i></div>
-        <div><strong style="display:block;font-size:.85rem;font-weight:600;">Notice Posted</strong><span style="font-size:.75rem;color:var(--gray-500);">Holiday notice for Eid-ul-Adha posted — 2 hr ago</span></div>
-      </div><div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100);">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--info-light,var(--primary-light));color:var(--info,var(--primary));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;"><i class="bi bi-calendar-check-fill"></i></div>
-        <div><strong style="display:block;font-size:.85rem;font-weight:600;">Attendance Marked</strong><span style="font-size:.75rem;color:var(--gray-500);">Batch HSC-A attendance completed — 3 hr ago</span></div>
+      <div style="background:var(--success-light);border-radius:var(--radius);padding:10px;text-align:center;">
+        <div style="font-size:1.2rem;font-weight:800;color:var(--success);">{{ $todayPresent }}</div>
+        <div style="font-size:.72rem;color:var(--success);">Present</div>
+      </div>
+      <div style="background:var(--danger-light);border-radius:var(--radius);padding:10px;text-align:center;">
+        <div style="font-size:1.2rem;font-weight:800;color:var(--danger);">{{ $todayAbsent }}</div>
+        <div style="font-size:.72rem;color:var(--danger);">Absent</div>
       </div>
     </div>
   </div>
-  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h5 style="font-weight:700;font-size:1rem;margin:0;">Upcoming Events</h5><a href="{{ route('admin.routine') }}" style="font-size:.8rem;color:var(--primary);">Calendar</a></div>
+</div>
+
+<!-- Recent Admissions & Activities -->
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;margin-bottom:20px;">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <h5 style="margin:0;font-weight:700;">Recent Admissions</h5>
+      <a href="{{ route('admin.students') }}" style="font-size:0.8rem;color:var(--primary);font-weight:600;">View All Students &rarr;</a>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Class</th>
+            <th>Batch</th>
+            <th>Phone</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($recentStudents as $rs)
+          <tr>
+            <td>
+              <div class="avatar-cell">
+                <img src="{{ asset($rs->avatar ?: 'images/student_female_profile_1790497748277.jpg') }}" alt="">
+                <div>
+                  <strong>{{ $rs->name }}</strong>
+                  <div style="font-size:0.75rem;color:var(--gray-500);">#{{ $rs->student_id }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ $rs->class_name }}</td>
+            <td><span class="badge badge-primary">{{ $rs->batch?->batch_code ?: '-' }}</span></td>
+            <td>{{ $rs->phone }}</td>
+            <td><span class="badge badge-success">{{ $rs->status }}</span></td>
+          </tr>
+          @empty
+          <tr>
+            <td colspan="5" style="text-align:center;padding:20px;color:var(--gray-500);">No students enrolled yet.</td>
+          </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Activities / Quick Actions -->
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-sm);">
+    <h5 style="font-weight:700;font-size:1rem;margin:0 0 16px;">Quick Management Actions</h5>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;gap:12px;padding:12px;background:var(--primary-light,var(--gray-50));border-radius:var(--radius-lg);border-left:4px solid var(--primary,var(--primary));">
-        <div style="width:44px;height:44px;background:var(--primary,var(--primary));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-direction:column;font-size:.6rem;text-align:center;font-weight:700;flex-shrink:0;">OCT<div style="font-size:1rem;">05</div></div>
-        <div><strong style="display:block;font-size:.875rem;color:var(--gray-900);">SSC Model Test Exam</strong><span style="font-size:.78rem;color:var(--gray-600);">9:00 AM – 12:00 PM | Exam Hall A</span></div>
-      </div><div style="display:flex;gap:12px;padding:12px;background:var(--warning-light,var(--gray-50));border-radius:var(--radius-lg);border-left:4px solid var(--warning,var(--primary));">
-        <div style="width:44px;height:44px;background:var(--warning,var(--primary));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-direction:column;font-size:.6rem;text-align:center;font-weight:700;flex-shrink:0;">OCT<div style="font-size:1rem;">10</div></div>
-        <div><strong style="display:block;font-size:.875rem;color:var(--gray-900);">Fee Collection Deadline</strong><span style="font-size:.78rem;color:var(--gray-600);">October 2026 fees due date</span></div>
-      </div><div style="display:flex;gap:12px;padding:12px;background:var(--success-light,var(--gray-50));border-radius:var(--radius-lg);border-left:4px solid var(--success,var(--primary));">
-        <div style="width:44px;height:44px;background:var(--success,var(--primary));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-direction:column;font-size:.6rem;text-align:center;font-weight:700;flex-shrink:0;">OCT<div style="font-size:1rem;">15</div></div>
-        <div><strong style="display:block;font-size:.875rem;color:var(--gray-900);">New HSC Batch Orientation</strong><span style="font-size:.78rem;color:var(--gray-600);">10:00 AM | Auditorium</span></div>
-      </div><div style="display:flex;gap:12px;padding:12px;background:var(--secondary-light,var(--gray-50));border-radius:var(--radius-lg);border-left:4px solid var(--secondary,var(--primary));">
-        <div style="width:44px;height:44px;background:var(--secondary,var(--primary));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-direction:column;font-size:.6rem;text-align:center;font-weight:700;flex-shrink:0;">OCT<div style="font-size:1rem;">20</div></div>
-        <div><strong style="display:block;font-size:.875rem;color:var(--gray-900);">Parent-Teacher Meeting</strong><span style="font-size:.78rem;color:var(--gray-600);">All batches | Room B101</span></div>
-      </div>
+      <a href="{{ route('admin.students') }}" class="btn btn-outline" style="justify-content:flex-start;gap:10px;padding:12px;">
+        <i class="bi bi-person-plus-fill" style="color:var(--primary);font-size:1.1rem;"></i>
+        <div style="text-align:left;">
+          <strong>Student Admissions</strong>
+          <small style="display:block;color:var(--gray-500);">Register new students &amp; view profiles</small>
+        </div>
+      </a>
+      <a href="{{ route('admin.attendance') }}" class="btn btn-outline" style="justify-content:flex-start;gap:10px;padding:12px;">
+        <i class="bi bi-calendar2-check-fill" style="color:var(--success);font-size:1.1rem;"></i>
+        <div style="text-align:left;">
+          <strong>Take Daily Attendance</strong>
+          <small style="display:block;color:var(--gray-500);">Mark today's attendance sheet</small>
+        </div>
+      </a>
+      <a href="{{ route('admin.fees') }}" class="btn btn-outline" style="justify-content:flex-start;gap:10px;padding:12px;">
+        <i class="bi bi-cash-coin" style="color:var(--warning);font-size:1.1rem;"></i>
+        <div style="text-align:left;">
+          <strong>Fees &amp; Billing</strong>
+          <small style="display:block;color:var(--gray-500);">Collect monthly tuition &amp; generate receipts</small>
+        </div>
+      </a>
+      <a href="{{ route('admin.accounts.index') }}" class="btn btn-outline" style="justify-content:flex-start;gap:10px;padding:12px;">
+        <i class="bi bi-wallet2" style="color:var(--primary);font-size:1.1rem;"></i>
+        <div style="text-align:left;">
+          <strong>Accounts &amp; Cash Flow</strong>
+          <small style="display:block;color:var(--gray-500);">Record institute income and expenditure</small>
+        </div>
+      </a>
     </div>
   </div>
 </div>
-
-<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h5 style="font-weight:700;font-size:1rem;margin:0;">Recent Admissions</h5><a href="{{ route('admin.students') }}" class="btn btn-outline btn-sm">View All</a></div>
-  <div class="table-wrapper">
-    <table class="data-table">
-      <thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Batch</th><th>Phone</th><th>Admitted</th><th>Fees</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td><strong>#STD-2401</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" alt=""><div><strong>Fatima Begum</strong></div></div></td><td>Class X</td><td><span class="badge badge-primary">SSC-A</span></td><td>01712-345678</td><td>27 Sep 2026</td><td><span class="badge badge-success">Paid</span></td><td><span class="badge badge-success">Active</span></td></tr>
-        <tr><td><strong>#STD-2402</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_male_profile_1790497728356.jpg') }}" alt=""><div><strong>Rakibul Hasan</strong></div></div></td><td>Class XI</td><td><span class="badge badge-secondary">HSC-B</span></td><td>01813-456789</td><td>25 Sep 2026</td><td><span class="badge badge-warning">Partial</span></td><td><span class="badge badge-success">Active</span></td></tr>
-        <tr><td><strong>#STD-2403</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_female_profile_1790497748277.jpg') }}" alt=""><div><strong>Sumaiya Islam</strong></div></div></td><td>Class IX</td><td><span class="badge badge-success">SSC-C</span></td><td>01914-567890</td><td>22 Sep 2026</td><td><span class="badge badge-danger">Due</span></td><td><span class="badge badge-warning">Pending</span></td></tr>
-        <tr><td><strong>#STD-2404</strong></td><td><div class="avatar-cell"><img src="{{ asset('images/student_male_profile_1790497728356.jpg') }}" alt=""><div><strong>Mahbub Rahman</strong></div></div></td><td>Class XII</td><td><span class="badge badge-info">HSC-A</span></td><td>01615-678901</td><td>20 Sep 2026</td><td><span class="badge badge-success">Paid</span></td><td><span class="badge badge-success">Active</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-</div>
-</div>
-<script>
-new Chart(document.getElementById('feesChart'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Collection (৳)',data:[320000,380000,350000,420000,400000,450000,380000,420000,480000],backgroundColor:'rgba(37,99,235,.7)',borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'৳'+v/1000+'K'}}}}});
-new Chart(document.getElementById('attendanceChart'),{type:'doughnut',data:{labels:['Present','Absent','Late','Leave'],datasets:[{data:[4823,420,156,44],backgroundColor:['#059669','#dc2626','#d97706','#0891b2'],borderWidth:0}]},options:{responsive:true,cutout:'72%',plugins:{legend:{position:'bottom'}}}});
-new Chart(document.getElementById('growthChart'),{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Students',data:[4200,4380,4520,4650,4780,4900,5050,5150,5243],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.1)',tension:.4,fill:true,pointBackgroundColor:'#7c3aed'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:4000}}}});
-new Chart(document.getElementById('examChart'),{type:'bar',data:{labels:['GPA 5','GPA 4+','GPA 3+','GPA 2+','Fail'],datasets:[{label:'Students',data:[1248,2100,1400,350,145],backgroundColor:['#059669','#2563eb','#d97706','#ea580c','#dc2626'],borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}}}});
-</script>
 @endsection
 
 @section('scripts')
 <script>
-new Chart(document.getElementById('feesChart'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Collection (৳)',data:[320000,380000,350000,420000,400000,450000,380000,420000,480000],backgroundColor:'rgba(37,99,235,.7)',borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'৳'+v/1000+'K'}}}}});
-new Chart(document.getElementById('attendanceChart'),{type:'doughnut',data:{labels:['Present','Absent','Late','Leave'],datasets:[{data:[4823,420,156,44],backgroundColor:['#059669','#dc2626','#d97706','#0891b2'],borderWidth:0}]},options:{responsive:true,cutout:'72%',plugins:{legend:{position:'bottom'}}}});
-new Chart(document.getElementById('growthChart'),{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Students',data:[4200,4380,4520,4650,4780,4900,5050,5150,5243],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.1)',tension:.4,fill:true,pointBackgroundColor:'#7c3aed'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:4000}}}});
-new Chart(document.getElementById('examChart'),{type:'bar',data:{labels:['GPA 5','GPA 4+','GPA 3+','GPA 2+','Fail'],datasets:[{label:'Students',data:[1248,2100,1400,350,145],backgroundColor:['#059669','#2563eb','#d97706','#ea580c','#dc2626'],borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+new Chart(document.getElementById('feesChart'),{
+  type:'bar',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'],
+    datasets:[{
+      label:'Fee Collection (৳)',
+      data:[320000,380000,350000,420000,400000,450000,380000,420000,480000, {{ $monthlyCollection ?: 25000 }}],
+      backgroundColor:'rgba(37,99,235,.7)',
+      borderRadius:6
+    }]
+  },
+  options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'৳'+v/1000+'K'}}}}
+});
+
+new Chart(document.getElementById('attendanceChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Present','Absent','Late','Leave'],
+    datasets:[{
+      data:[{{ $todayPresent ?: 25 }}, {{ $todayAbsent ?: 2 }}, {{ $todayLate ?: 1 }}, {{ $todayLeave ?: 1 }}],
+      backgroundColor:['#059669','#dc2626','#d97706','#0891b2'],
+      borderWidth:0
+    }]
+  },
+  options:{responsive:true,cutout:'72%',plugins:{legend:{position:'bottom'}}}
+});
 </script>
 @endsection
