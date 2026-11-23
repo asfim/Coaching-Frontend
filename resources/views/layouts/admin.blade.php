@@ -31,6 +31,7 @@ body{overflow-x:hidden;}
     <a href="{{ route('admin.teachers') }}" class="nav-item {{ request()->routeIs('admin.teachers*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i> Teachers</a>
     <a href="{{ route('admin.courses') }}" class="nav-item {{ request()->routeIs('admin.courses*') ? 'active' : '' }}"><i class="bi bi-journal-bookmark"></i> Courses</a>
     <a href="{{ route('admin.classes.index') }}" class="nav-item {{ request()->routeIs('admin.classes*') ? 'active' : '' }}"><i class="bi bi-book"></i> Classes</a>
+    <a href="{{ route('admin.subjects.index') }}" class="nav-item {{ request()->routeIs('admin.subjects*') ? 'active' : '' }}"><i class="bi bi-journals"></i> Subjects</a>
     <a href="{{ route('admin.batches') }}" class="nav-item {{ request()->routeIs('admin.batches*') ? 'active' : '' }}"><i class="bi bi-collection"></i> Batches</a>
     <a href="{{ route('admin.attendance') }}" class="nav-item {{ request()->routeIs('admin.attendance*') ? 'active' : '' }}"><i class="bi bi-calendar2-check"></i> Attendance</a>
     <a href="{{ route('admin.exams') }}" class="nav-item {{ request()->routeIs('admin.exams*') ? 'active' : '' }}"><i class="bi bi-file-earmark-text"></i> Exams</a>

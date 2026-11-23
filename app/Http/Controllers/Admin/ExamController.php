@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamType;
 use App\Models\Batch;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -26,8 +27,9 @@ class ExamController extends Controller
         $exams = $query->paginate(12);
         $batches = Batch::all();
         $examTypes = ExamType::withCount('exams')->orderBy('name')->get();
+        $subjects = Subject::where('status', 'Active')->orderBy('name')->get();
 
-        return view('admin.exams', compact('exams', 'batches', 'examTypes'));
+        return view('admin.exams', compact('exams', 'batches', 'examTypes', 'subjects'));
     }
 
     public function store(Request $request)
@@ -51,6 +53,16 @@ class ExamController extends Controller
         );
         $validated['exam_type_id'] = $typeObj->id;
         $validated['exam_type'] = $typeObj->name;
+
+        $subObj = Subject::firstOrCreate(
+            ['name' => $validated['subject']],
+            [
+                'code' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $validated['subject']), 0, 4)) . '-101',
+                'status' => 'Active'
+            ]
+        );
+        $validated['subject_id'] = $subObj->id;
+        $validated['subject'] = $subObj->name;
 
         Exam::create($validated);
 
@@ -80,6 +92,16 @@ class ExamController extends Controller
         );
         $validated['exam_type_id'] = $typeObj->id;
         $validated['exam_type'] = $typeObj->name;
+
+        $subObj = Subject::firstOrCreate(
+            ['name' => $validated['subject']],
+            [
+                'code' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $validated['subject']), 0, 4)) . '-101',
+                'status' => 'Active'
+            ]
+        );
+        $validated['subject_id'] = $subObj->id;
+        $validated['subject'] = $subObj->name;
 
         $exam->update($validated);
 

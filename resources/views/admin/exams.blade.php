@@ -181,8 +181,16 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
-          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Subject *</label>
-          <input type="text" name="subject" class="form-control" placeholder="e.g. Physics" required>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label style="font-size:0.82rem;font-weight:600;margin:0;">Subject *</label>
+            <a href="{{ route('admin.subjects.index') }}" target="_blank" style="font-size:0.75rem;color:var(--primary);text-decoration:none;font-weight:600;">+ Manage</a>
+          </div>
+          <select name="subject" class="form-select" required>
+            <option value="">-- Select Subject --</option>
+            @foreach($subjects as $sub)
+              <option value="{{ $sub->name }}">{{ $sub->name }} ({{ $sub->code }})</option>
+            @endforeach
+          </select>
         </div>
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Exam Date *</label>
@@ -269,8 +277,16 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
-          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Subject *</label>
-          <input type="text" name="subject" id="editExamSubject" class="form-control" required>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label style="font-size:0.82rem;font-weight:600;margin:0;">Subject *</label>
+            <a href="{{ route('admin.subjects.index') }}" target="_blank" style="font-size:0.75rem;color:var(--primary);text-decoration:none;font-weight:600;">+ Manage</a>
+          </div>
+          <select name="subject" id="editExamSubject" class="form-select" required>
+            <option value="">-- Select Subject --</option>
+            @foreach($subjects as $sub)
+              <option value="{{ $sub->name }}">{{ $sub->name }} ({{ $sub->code }})</option>
+            @endforeach
+          </select>
         </div>
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Exam Date *</label>

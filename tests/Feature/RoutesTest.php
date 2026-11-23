@@ -14,6 +14,9 @@ use App\Models\CourseCategory;
 use App\Models\Exam;
 use App\Models\Batch;
 use App\Models\ExamType;
+use App\Models\Result;
+use App\Models\Subject;
+use App\Models\ResultItem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -101,6 +104,7 @@ class RoutesTest extends TestCase
             '/admin/fees',
             '/admin/invoice',
             '/admin/classes',
+            '/admin/subjects',
             '/admin/accounts',
             '/admin/notices',
             '/admin/sms',
@@ -550,5 +554,166 @@ class RoutesTest extends TestCase
 
         // Clean up exam
         $exam->delete();
+    }
+
+    public function test_results_crud_and_student_live_search(): void
+    {
+        $student = Student::first() ?? Student::factory()->create();
+        $exam = Exam::first() ?? Exam::factory()->create();
+
+        // 1. Test live search endpoint
+        $searchRes = $this->actingAs($this->adminUser)->getJson(route('admin.results.search-students', [
+            'q' => substr($student->name, 0, 3)
+        ]));
+        $searchRes->assertStatus(200);
+        $searchRes->assertJsonFragment(['id' => $student->id, 'name' => $student->name]);
+
+        // 2. Store Result
+        $storeRes = $this->actingAs($this->adminUser)->post(route('admin.results.store'), [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'obtained_marks' => 88,
+            'total_marks' => 100,
+            'remarks' => 'Outstanding analytical skills',
+        ]);
+        $storeRes->assertRedirect(route('admin.results'));
+        $storeRes->assertSessionHas('success');
+
+        $result = Result::where('exam_id', $exam->id)->where('student_id', $student->id)->first();
+        $this->assertNotNull($result);
+        $this->assertEquals(88, $result->obtained_marks);
+        $this->assertEquals(5.00, $result->gpa);
+        $this->assertEquals('A+', $result->grade);
+
+        // 3. Update Result
+        $updateRes = $this->actingAs($this->adminUser)->put(route('admin.results.update', $result->id), [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'obtained_marks' => 75,
+            'total_marks' => 100,
+            'remarks' => 'Good performance',
+        ]);
+        $updateRes->assertRedirect(route('admin.results'));
+        $updateRes->assertSessionHas('success');
+
+        $result->refresh();
+        $this->assertEquals(75, $result->obtained_marks);
+        $this->assertEquals(4.00, $result->gpa);
+        $this->assertEquals('A', $result->grade);
+
+        // 4. Destroy Result
+        $deleteRes = $this->actingAs($this->adminUser)->delete(route('admin.results.destroy', $result->id));
+        $deleteRes->assertRedirect(route('admin.results'));
+        $deleteRes->assertSessionHas('success');
+
+        $this->assertNull(Result::find($result->id));
+    }
+
+    public function test_subjects_crud_and_exam_binding(): void
+    {
+        // 1. Create Subject
+        $response = $this->actingAs($this->adminUser)->post(route('admin.subjects.store'), [
+            'name' => 'Advanced Robotics & AI',
+            'code' => 'ROBO-301',
+            'description' => 'Applied robotics and coding curriculum',
+            'status' => 'Active',
+        ]);
+        $response->assertRedirect(route('admin.subjects.index'));
+        $response->assertSessionHas('success');
+
+        $subject = Subject::where('code', 'ROBO-301')->first();
+        $this->assertNotNull($subject);
+        $this->assertEquals('Advanced Robotics & AI', $subject->name);
+
+        // 2. Update Subject
+        $up = $this->actingAs($this->adminUser)->put(route('admin.subjects.update', $subject->id), [
+            'name' => 'Advanced Robotics & Automation',
+            'code' => 'ROBO-301',
+            'description' => 'Updated curriculum notes',
+            'status' => 'Active',
+        ]);
+        $up->assertRedirect(route('admin.subjects.index'));
+        $up->assertSessionHas('success');
+
+        $subject->refresh();
+        $this->assertEquals('Advanced Robotics & Automation', $subject->name);
+
+        // 3. Bind with Exam
+        $batch = Batch::first() ?? Batch::factory()->create();
+        $examRes = $this->actingAs($this->adminUser)->post(route('admin.exams.store'), [
+            'title' => 'Robotics Midterm Lab Exam',
+            'exam_type' => 'Class Test',
+            'batch_id' => $batch->id,
+            'subject' => 'Advanced Robotics & Automation',
+            'date' => now()->addDays(7)->toDateString(),
+            'time' => '10:00 AM - 12:00 PM',
+            'total_marks' => 50,
+            'pass_marks' => 20,
+            'room' => 'Lab 1',
+            'status' => 'Upcoming',
+        ]);
+        $examRes->assertRedirect(route('admin.exams'));
+
+        $exam = Exam::where('title', 'Robotics Midterm Lab Exam')->first();
+        $this->assertNotNull($exam);
+        $this->assertEquals($subject->id, $exam->subject_id);
+        $this->assertEquals('Advanced Robotics & Automation', $exam->subject);
+
+        // 4. Delete Subject (exam's subject_id becomes null safely)
+        $del = $this->actingAs($this->adminUser)->delete(route('admin.subjects.destroy', $subject->id));
+        $del->assertRedirect(route('admin.subjects.index'));
+        $del->assertSessionHas('success');
+
+        $this->assertNull(Subject::find($subject->id));
+        $exam->refresh();
+        $this->assertNull($exam->subject_id);
+
+        $exam->delete();
+    }
+
+    public function test_subject_wise_marks_and_marksheet_download(): void
+    {
+        $student = Student::first() ?? Student::factory()->create();
+        $exam = Exam::first() ?? Exam::factory()->create();
+
+        // 1. Store result with multiple subjects
+        $response = $this->actingAs($this->adminUser)->post(route('admin.results.store'), [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'remarks' => 'Good performance in Science subjects',
+            'subjects' => [
+                ['subject_name' => 'Physics', 'obtained_marks' => 85, 'total_marks' => 100],
+                ['subject_name' => 'Chemistry', 'obtained_marks' => 75, 'total_marks' => 100],
+                ['subject_name' => 'Higher Mathematics', 'obtained_marks' => 90, 'total_marks' => 100],
+            ],
+        ]);
+        $response->assertRedirect(route('admin.results'));
+        $response->assertSessionHas('success');
+
+        $result = Result::where('exam_id', $exam->id)->where('student_id', $student->id)->first();
+        $this->assertNotNull($result);
+        // Total obtained: 85 + 75 + 90 = 250
+        $this->assertEquals(250, $result->obtained_marks);
+        // Total marks: 100 + 100 + 100 = 300
+        $this->assertEquals(300, $result->total_marks);
+        // Subject GPAs: Physics (5.0), Chemistry (4.0), Math (5.0) -> Average = (5+4+5)/3 = 4.67
+        $this->assertEquals(4.67, $result->gpa);
+        $this->assertEquals('A', $result->grade);
+
+        // Check Result Items
+        $this->assertCount(3, $result->items);
+
+        // 2. Access Marksheet view for download/print
+        $marksheetRes = $this->actingAs($this->adminUser)->get(route('admin.results.marksheet', $result->id));
+        $marksheetRes->assertStatus(200);
+        $marksheetRes->assertSee('Physics');
+        $marksheetRes->assertSee('Chemistry');
+        $marksheetRes->assertSee('Higher Mathematics');
+        $marksheetRes->assertSee('250.0');
+        $marksheetRes->assertSee('4.67');
+
+        // Clean up
+        $result->items()->delete();
+        $result->delete();
     }
 }

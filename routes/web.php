@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\SmsController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ClassController;
+use App\Http\Controllers\Admin\SubjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -107,8 +108,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Results CRUD
     Route::get('/results', [ResultController::class, 'index'])->name('results');
+    Route::get('/results/search-students', [ResultController::class, 'searchStudents'])->name('results.search-students');
+    Route::get('/results/{id}/marksheet', [ResultController::class, 'marksheet'])->name('results.marksheet');
     Route::post('/results', [ResultController::class, 'store'])->name('results.store');
+    Route::put('/results/{id}', [ResultController::class, 'update'])->name('results.update');
     Route::delete('/results/{id}', [ResultController::class, 'destroy'])->name('results.destroy');
+
+    // Subjects CRUD (Requested: "subject name ekta menu hobe sekhane sob subject add kora jabe")
+    Route::get('/subjects', [SubjectController::class, 'index'])->name('subjects.index');
+    Route::post('/subjects', [SubjectController::class, 'store'])->name('subjects.store');
+    Route::put('/subjects/{id}', [SubjectController::class, 'update'])->name('subjects.update');
+    Route::delete('/subjects/{id}', [SubjectController::class, 'destroy'])->name('subjects.destroy');
 
     // Routine CRUD
     Route::get('/routine', [RoutineController::class, 'index'])->name('routine');

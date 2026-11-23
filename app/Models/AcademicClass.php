@@ -26,4 +26,9 @@ class AcademicClass extends Model
     {
         return $this->hasMany(Batch::class, 'class_id');
     }
+
+    public function subjects(): HasMany
+    {
+        return $this->hasMany(Subject::class, 'class_id');
+    }
 }
