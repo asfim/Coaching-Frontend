@@ -11,6 +11,7 @@ class AcademicClass extends Model
 
     protected $fillable = [
         'name',
+        'class_type',
         'code',
         'numeric_level',
         'description',

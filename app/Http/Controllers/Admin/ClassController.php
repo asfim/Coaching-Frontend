@@ -13,6 +13,10 @@ class ClassController extends Controller
     {
         $query = AcademicClass::withCount(['students', 'batches'])->latest();
 
+        if ($request->filled('class_type')) {
+            $query->where('class_type', $request->class_type);
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -26,13 +30,15 @@ class ClassController extends Controller
             });
         }
 
-        $classes = $query->paginate(12);
+        $classes = $query->paginate(12)->withQueryString();
 
         $totalClasses = AcademicClass::count();
+        $academicCount = AcademicClass::where('class_type', 'Academic')->count();
+        $targetCount = AcademicClass::where('class_type', 'Target')->count();
         $activeClasses = AcademicClass::where('status', 'Active')->count();
         $totalStudents = Student::count();
 
-        return view('admin.classes.index', compact('classes', 'totalClasses', 'activeClasses', 'totalStudents'));
+        return view('admin.classes.index', compact('classes', 'totalClasses', 'academicCount', 'targetCount', 'activeClasses', 'totalStudents'));
     }
 
     public function store(Request $request)
@@ -41,9 +47,12 @@ class ClassController extends Controller
             'name' => 'required|string|max:255|unique:classes,name',
             'code' => 'nullable|string|max:50',
             'numeric_level' => 'nullable|integer',
+            'class_type' => 'nullable|in:Academic,Target',
             'description' => 'nullable|string',
             'status' => 'required|in:Active,Inactive',
         ]);
+
+        $validated['class_type'] = $request->input('class_type', 'Academic');
 
         AcademicClass::create($validated);
 
@@ -58,9 +67,12 @@ class ClassController extends Controller
             'name' => 'required|string|max:255|unique:classes,name,' . $class->id,
             'code' => 'nullable|string|max:50',
             'numeric_level' => 'nullable|integer',
+            'class_type' => 'nullable|in:Academic,Target',
             'description' => 'nullable|string',
             'status' => 'required|in:Active,Inactive',
         ]);
+
+        $validated['class_type'] = $request->input('class_type', $class->class_type ?? 'Academic');
 
         $class->update($validated);
 

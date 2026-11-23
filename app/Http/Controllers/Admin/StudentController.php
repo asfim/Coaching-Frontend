@@ -17,6 +17,10 @@ class StudentController extends Controller
     {
         $query = Student::with(['batch', 'course', 'fees'])->latest();
 
+        if ($request->filled('program_type')) {
+            $query->where('program_type', $request->program_type);
+        }
+
         if ($request->filled('batch_id')) {
             $query->where('batch_id', $request->batch_id);
         }
@@ -38,12 +42,19 @@ class StudentController extends Controller
             });
         }
 
-        $students = $query->paginate(12);
+        $students = $query->paginate(12)->withQueryString();
         $batches = Batch::all();
         $courses = Course::all();
         $classes = AcademicClass::where('status', 'Active')->orderBy('numeric_level')->get();
 
-        return view('admin.students', compact('students', 'batches', 'courses', 'classes'));
+        $totalStudents = Student::count();
+        $academicStudentsCount = Student::where('program_type', 'Academic')->count();
+        $targetStudentsCount = Student::where('program_type', 'Target')->count();
+
+        return view('admin.students', compact(
+            'students', 'batches', 'courses', 'classes',
+            'totalStudents', 'academicStudentsCount', 'targetStudentsCount'
+        ));
     }
 
     public function store(Request $request)
@@ -54,6 +65,7 @@ class StudentController extends Controller
             'phone' => 'required|string|max:20',
             'guardian_name' => 'nullable|string|max:255',
             'guardian_phone' => 'nullable|string|max:20',
+            'program_type' => 'nullable|in:Academic,Target',
             'class_name' => 'required|string|max:100',
             'course_id' => 'nullable',
             'batch_id' => 'nullable',
@@ -70,10 +82,18 @@ class StudentController extends Controller
         $validated['admission_date'] = $request->filled('admission_date') ? $request->admission_date : now()->toDateString();
         $validated['email'] = $request->filled('email') ? $request->email : null;
 
-        // Associate with AcademicClass
+        // Associate with AcademicClass and deduce program_type
         $classObj = AcademicClass::where('name', $validated['class_name'])->first();
         if ($classObj) {
             $validated['class_id'] = $classObj->id;
+            if (empty($validated['program_type'])) {
+                $validated['program_type'] = $classObj->class_type ?? 'Academic';
+            }
+        }
+
+        if (empty($validated['program_type'])) {
+            $batchObj = $validated['batch_id'] ? Batch::find($validated['batch_id']) : null;
+            $validated['program_type'] = $batchObj?->program_type ?? 'Academic';
         }
 
         // Auto-generate guaranteed unique student ID (STD-2401, STD-2402, ...)
@@ -148,6 +168,7 @@ class StudentController extends Controller
             'phone' => 'required|string|max:20',
             'guardian_name' => 'nullable|string|max:255',
             'guardian_phone' => 'nullable|string|max:20',
+            'program_type' => 'nullable|in:Academic,Target',
             'class_name' => 'required|string|max:100',
             'course_id' => 'nullable',
             'batch_id' => 'nullable',
@@ -160,6 +181,19 @@ class StudentController extends Controller
         $validated['course_id'] = $request->filled('course_id') ? $request->course_id : null;
         $validated['batch_id'] = $request->filled('batch_id') ? $request->batch_id : null;
         $validated['email'] = $request->filled('email') ? $request->email : null;
+
+        $classObj = AcademicClass::where('name', $validated['class_name'])->first();
+        if ($classObj) {
+            $validated['class_id'] = $classObj->id;
+            if (empty($validated['program_type'])) {
+                $validated['program_type'] = $classObj->class_type ?? 'Academic';
+            }
+        }
+
+        if (empty($validated['program_type'])) {
+            $batchObj = $validated['batch_id'] ? Batch::find($validated['batch_id']) : null;
+            $validated['program_type'] = $batchObj?->program_type ?? ($student->program_type ?? 'Academic');
+        }
 
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');

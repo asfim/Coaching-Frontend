@@ -10,6 +10,7 @@ class Subject extends Model
 {
     protected $fillable = [
         'name',
+        'program_type',
         'code',
         'class_id',
         'description',

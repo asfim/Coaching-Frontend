@@ -16,6 +16,10 @@ class ResultController extends Controller
     {
         $query = Result::with(['exam.batch', 'student', 'items'])->latest();
 
+        if ($request->filled('program_type')) {
+            $query->where('program_type', $request->program_type);
+        }
+
         if ($request->filled('exam_id')) {
             $query->where('exam_id', $request->exam_id);
         }
@@ -29,12 +33,19 @@ class ResultController extends Controller
             });
         }
 
-        $results = $query->paginate(15);
+        $results = $query->paginate(15)->withQueryString();
         $exams = Exam::orderBy('date', 'desc')->get();
         $students = Student::orderBy('name')->get();
         $subjects = Subject::where('status', 'Active')->orderBy('name')->get();
 
-        return view('admin.results', compact('results', 'exams', 'students', 'subjects'));
+        $totalResultsCount = Result::count();
+        $academicResultsCount = Result::where('program_type', 'Academic')->count();
+        $targetResultsCount = Result::where('program_type', 'Target')->count();
+
+        return view('admin.results', compact(
+            'results', 'exams', 'students', 'subjects',
+            'totalResultsCount', 'academicResultsCount', 'targetResultsCount'
+        ));
     }
 
     public function searchStudents(Request $request)
@@ -50,7 +61,7 @@ class ResultController extends Controller
                 });
             })
             ->limit(25)
-            ->get(['id', 'student_id', 'name', 'class_name', 'phone', 'avatar']);
+            ->get(['id', 'student_id', 'name', 'class_name', 'program_type', 'phone', 'avatar']);
 
         return response()->json($students);
     }
@@ -60,16 +71,26 @@ class ResultController extends Controller
         $request->validate([
             'exam_id' => 'required|exists:exams,id',
             'student_id' => 'required|exists:students,id',
+            'program_type' => 'nullable|in:Academic,Target',
+            'merit_position' => 'nullable|integer|min:1',
             'remarks' => 'nullable|string',
         ]);
 
         $calculated = $this->calculateResultData($request);
+
+        $exam = Exam::find($request->exam_id);
+        $student = Student::find($request->student_id);
+        $programType = $request->input('program_type') 
+            ?: ($exam?->program_type ?? ($student?->program_type ?? 'Academic'));
+        $meritPos = $request->filled('merit_position') ? (int)$request->merit_position : null;
 
         $result = Result::updateOrCreate(
             ['exam_id' => $request->exam_id, 'student_id' => $request->student_id],
             [
                 'exam_id' => $request->exam_id,
                 'student_id' => $request->student_id,
+                'program_type' => $programType,
+                'merit_position' => $meritPos,
                 'obtained_marks' => $calculated['obtained_marks'],
                 'total_marks' => $calculated['total_marks'],
                 'gpa' => $calculated['gpa'],
@@ -81,7 +102,7 @@ class ResultController extends Controller
         // Sync Result Items
         $this->syncResultItems($result, $calculated['items']);
 
-        return redirect()->route('admin.results')->with('success', 'Exam result recorded successfully with subject-wise marks and GPA!');
+        return redirect()->route('admin.results')->with('success', 'Exam result recorded successfully with subject-wise evaluation and ranking!');
     }
 
     public function update(Request $request, $id)
@@ -91,14 +112,24 @@ class ResultController extends Controller
         $request->validate([
             'exam_id' => 'required|exists:exams,id',
             'student_id' => 'required|exists:students,id',
+            'program_type' => 'nullable|in:Academic,Target',
+            'merit_position' => 'nullable|integer|min:1',
             'remarks' => 'nullable|string',
         ]);
 
         $calculated = $this->calculateResultData($request);
 
+        $exam = Exam::find($request->exam_id);
+        $student = Student::find($request->student_id);
+        $programType = $request->input('program_type') 
+            ?: ($exam?->program_type ?? ($student?->program_type ?? ($result->program_type ?? 'Academic')));
+        $meritPos = $request->filled('merit_position') ? (int)$request->merit_position : $result->merit_position;
+
         $result->update([
             'exam_id' => $request->exam_id,
             'student_id' => $request->student_id,
+            'program_type' => $programType,
+            'merit_position' => $meritPos,
             'obtained_marks' => $calculated['obtained_marks'],
             'total_marks' => $calculated['total_marks'],
             'gpa' => $calculated['gpa'],

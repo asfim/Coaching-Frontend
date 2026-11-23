@@ -611,28 +611,38 @@ class RoutesTest extends TestCase
 
     public function test_subjects_crud_and_exam_binding(): void
     {
-        // 1. Create Subject
+        $class = AcademicClass::first() ?? AcademicClass::factory()->create();
+
+        // 1. Create Subject for specific class
         $response = $this->actingAs($this->adminUser)->post(route('admin.subjects.store'), [
             'name' => 'Advanced Robotics & AI',
             'code' => 'ROBO-301',
+            'class_id' => $class->id,
             'description' => 'Applied robotics and coding curriculum',
             'status' => 'Active',
         ]);
-        $response->assertRedirect(route('admin.subjects.index'));
+        $response->assertRedirect(route('admin.subjects.index', ['class_id' => $class->id]));
         $response->assertSessionHas('success');
 
         $subject = Subject::where('code', 'ROBO-301')->first();
         $this->assertNotNull($subject);
         $this->assertEquals('Advanced Robotics & AI', $subject->name);
+        $this->assertEquals($class->id, $subject->class_id);
+
+        // Filter by class_id
+        $classFilterRes = $this->actingAs($this->adminUser)->get(route('admin.subjects.index', ['class_id' => $class->id]));
+        $classFilterRes->assertStatus(200);
+        $classFilterRes->assertSee('Advanced Robotics & AI');
 
         // 2. Update Subject
         $up = $this->actingAs($this->adminUser)->put(route('admin.subjects.update', $subject->id), [
             'name' => 'Advanced Robotics & Automation',
             'code' => 'ROBO-301',
+            'class_id' => $class->id,
             'description' => 'Updated curriculum notes',
             'status' => 'Active',
         ]);
-        $up->assertRedirect(route('admin.subjects.index'));
+        $up->assertRedirect(route('admin.subjects.index', ['class_id' => $class->id]));
         $up->assertSessionHas('success');
 
         $subject->refresh();
@@ -643,6 +653,7 @@ class RoutesTest extends TestCase
         $examRes = $this->actingAs($this->adminUser)->post(route('admin.exams.store'), [
             'title' => 'Robotics Midterm Lab Exam',
             'exam_type' => 'Class Test',
+            'class_id' => $class->id,
             'batch_id' => $batch->id,
             'subject' => 'Advanced Robotics & Automation',
             'date' => now()->addDays(7)->toDateString(),
@@ -658,10 +669,16 @@ class RoutesTest extends TestCase
         $this->assertNotNull($exam);
         $this->assertEquals($subject->id, $exam->subject_id);
         $this->assertEquals('Advanced Robotics & Automation', $exam->subject);
+        $this->assertEquals($class->id, $exam->class_id);
+
+        // Filter exams by class_id
+        $classFilterExam = $this->actingAs($this->adminUser)->get(route('admin.exams', ['class_id' => $class->id]));
+        $classFilterExam->assertStatus(200);
+        $classFilterExam->assertSee('Robotics Midterm Lab Exam');
 
         // 4. Delete Subject (exam's subject_id becomes null safely)
         $del = $this->actingAs($this->adminUser)->delete(route('admin.subjects.destroy', $subject->id));
-        $del->assertRedirect(route('admin.subjects.index'));
+        $del->assertRedirect(route('admin.subjects.index', ['class_id' => $class->id]));
         $del->assertSessionHas('success');
 
         $this->assertNull(Subject::find($subject->id));
@@ -715,5 +732,255 @@ class RoutesTest extends TestCase
         // Clean up
         $result->items()->delete();
         $result->delete();
+    }
+
+    public function test_academic_and_target_batch_dual_program_structure(): void
+    {
+        // Clean up any leftovers
+        Student::whereIn('name', ['Tanzim Academic Student', 'Fahim Target Student'])->delete();
+        Subject::whereIn('code', ['PHY-B9', 'ENG-MATH-T'])->delete();
+        Batch::whereIn('batch_code', ['ACH-T9', 'BUET-T26'])->delete();
+        AcademicClass::whereIn('name', ['Class IX Test Board', 'Engineering Target Test Batch'])->delete();
+
+        // 1. Classes: Academic Class & Target Batch Class
+        $academicClass = AcademicClass::create([
+            'name' => 'Class IX Test Board',
+            'code' => 'T-C09',
+            'class_type' => 'Academic',
+            'numeric_level' => 9,
+            'status' => 'Active',
+        ]);
+        $targetClass = AcademicClass::create([
+            'name' => 'Engineering Target Test Batch',
+            'code' => 'T-ENG',
+            'class_type' => 'Target',
+            'status' => 'Active',
+        ]);
+
+        $this->assertEquals('Academic', $academicClass->class_type);
+        $this->assertEquals('Target', $targetClass->class_type);
+
+        // Filter classes by type
+        $academicClassRes = $this->actingAs($this->adminUser)->get(route('admin.classes.index', ['class_type' => 'Academic']));
+        $academicClassRes->assertStatus(200);
+        $academicClassRes->assertSee('Class IX Test Board');
+
+        $targetClassRes = $this->actingAs($this->adminUser)->get(route('admin.classes.index', ['class_type' => 'Target']));
+        $targetClassRes->assertStatus(200);
+        $targetClassRes->assertSee('Engineering Target Test Batch');
+
+        // 2. Batches
+        $academicBatch = Batch::create([
+            'name' => 'Morning Achievers Test',
+            'batch_code' => 'ACH-T9',
+            'class_id' => $academicClass->id,
+            'class_name' => $academicClass->name,
+            'program_type' => 'Academic',
+            'days' => 'Sat, Mon, Wed',
+            'time_slot' => '08:00 AM - 10:00 AM',
+            'room' => 'Room 101',
+            'max_students' => 30,
+            'status' => 'Active',
+        ]);
+        $targetBatch = Batch::create([
+            'name' => 'BUET Titans Test 2026',
+            'batch_code' => 'BUET-T26',
+            'class_id' => $targetClass->id,
+            'class_name' => $targetClass->name,
+            'program_type' => 'Target',
+            'days' => 'Sun, Tue, Thu',
+            'time_slot' => '03:00 PM - 06:00 PM',
+            'room' => 'Hall Target',
+            'max_students' => 50,
+            'status' => 'Active',
+        ]);
+
+        // 3. Students: Academic Student vs Target Batch Student
+        $admitAcademic = $this->actingAs($this->adminUser)->post(route('admin.students.store'), [
+            'name' => 'Tanzim Academic Student',
+            'phone' => '01711-100201',
+            'class_name' => $academicClass->name,
+            'batch_id' => $academicBatch->id,
+            'program_type' => 'Academic',
+            'status' => 'Active',
+        ]);
+        $admitAcademic->assertRedirect(route('admin.students'));
+
+        $admitTarget = $this->actingAs($this->adminUser)->post(route('admin.students.store'), [
+            'name' => 'Fahim Target Student',
+            'phone' => '01811-100202',
+            'class_name' => $targetClass->name,
+            'batch_id' => $targetBatch->id,
+            'program_type' => 'Target',
+            'status' => 'Active',
+        ]);
+        $admitTarget->assertRedirect(route('admin.students'));
+
+        $academicStudent = Student::where('name', 'Tanzim Academic Student')->first();
+        $targetStudent = Student::where('name', 'Fahim Target Student')->first();
+        $this->assertNotNull($academicStudent);
+        $this->assertNotNull($targetStudent);
+        $this->assertEquals('Academic', $academicStudent->program_type);
+        $this->assertEquals('Target', $targetStudent->program_type);
+
+        // Verify Student filter tabs
+        $academicFilter = $this->actingAs($this->adminUser)->get(route('admin.students', ['program_type' => 'Academic']));
+        $academicFilter->assertStatus(200);
+        $academicFilter->assertSee('Tanzim Academic Student');
+
+        $targetFilter = $this->actingAs($this->adminUser)->get(route('admin.students', ['program_type' => 'Target']));
+        $targetFilter->assertStatus(200);
+        $targetFilter->assertSee('Fahim Target Student');
+
+        // 4. Subjects: Academic Subject vs Target Subject
+        $academicSubject = Subject::create([
+            'name' => 'Board Physics Test',
+            'code' => 'PHY-B9',
+            'class_id' => $academicClass->id,
+            'program_type' => 'Academic',
+            'status' => 'Active',
+        ]);
+        $targetSubject = Subject::create([
+            'name' => 'Advanced Mechanics & Calculus',
+            'code' => 'ENG-MATH-T',
+            'class_id' => $targetClass->id,
+            'program_type' => 'Target',
+            'status' => 'Active',
+        ]);
+
+        $subFilterAcademic = $this->actingAs($this->adminUser)->get(route('admin.subjects.index', ['program_type' => 'Academic', 'search' => 'Board Physics Test']));
+        $subFilterAcademic->assertStatus(200);
+        $subFilterAcademic->assertSee('Board Physics Test');
+
+        $subFilterTarget = $this->actingAs($this->adminUser)->get(route('admin.subjects.index', ['program_type' => 'Target', 'search' => 'Advanced Mechanics & Calculus']));
+        $subFilterTarget->assertStatus(200);
+        $subFilterTarget->assertSee('Advanced Mechanics & Calculus');
+
+        // 5. Exams: Academic Exam vs Target Exam
+        $academicExam = Exam::create([
+            'title' => 'SSC Board Physics Midterm Test',
+            'exam_type' => 'Monthly Exam',
+            'program_type' => 'Academic',
+            'class_id' => $academicClass->id,
+            'batch_id' => $academicBatch->id,
+            'subject' => $academicSubject->name,
+            'subject_id' => $academicSubject->id,
+            'date' => now()->addDays(3)->toDateString(),
+            'time' => '10:00 AM - 01:00 PM',
+            'total_marks' => 100,
+            'pass_marks' => 40,
+            'status' => 'Upcoming',
+        ]);
+
+        $targetExam = Exam::create([
+            'title' => 'BUET Admission Advance Model Test 1',
+            'exam_type' => 'Admission Model Test',
+            'program_type' => 'Target',
+            'class_id' => $targetClass->id,
+            'batch_id' => $targetBatch->id,
+            'subject' => $targetSubject->name,
+            'subject_id' => $targetSubject->id,
+            'date' => now()->addDays(5)->toDateString(),
+            'time' => '02:00 PM - 05:00 PM',
+            'total_marks' => 200,
+            'pass_marks' => 80,
+            'status' => 'Upcoming',
+        ]);
+
+        $this->assertEquals('Academic', $academicExam->program_type);
+        $this->assertEquals('Target', $targetExam->program_type);
+
+        $examFilterAcademic = $this->actingAs($this->adminUser)->get(route('admin.exams', ['program_type' => 'Academic']));
+        $examFilterAcademic->assertStatus(200);
+        $examFilterAcademic->assertSee('SSC Board Physics Midterm Test');
+
+        $examFilterTarget = $this->actingAs($this->adminUser)->get(route('admin.exams', ['program_type' => 'Target']));
+        $examFilterTarget->assertStatus(200);
+        $examFilterTarget->assertSee('BUET Admission Advance Model Test 1');
+
+        // 6. Results: Academic Result (with GPA) vs Target Result (with Merit Rank)
+        $academicResult = Result::create([
+            'exam_id' => $academicExam->id,
+            'student_id' => $academicStudent->id,
+            'program_type' => 'Academic',
+            'obtained_marks' => 88,
+            'total_marks' => 100,
+            'gpa' => 5.00,
+            'grade' => 'A+',
+            'remarks' => 'Outstanding academic board preparation',
+        ]);
+        $academicResult->items()->create([
+            'subject_id' => $academicSubject->id,
+            'subject_name' => $academicSubject->name,
+            'obtained_marks' => 88,
+            'total_marks' => 100,
+            'gpa' => 5.00,
+            'grade' => 'A+',
+        ]);
+
+        $targetResult = Result::create([
+            'exam_id' => $targetExam->id,
+            'student_id' => $targetStudent->id,
+            'program_type' => 'Target',
+            'merit_position' => 1,
+            'obtained_marks' => 176,
+            'total_marks' => 200,
+            'gpa' => 5.00,
+            'grade' => 'A+',
+            'remarks' => 'Top merit candidate for BUET Target batch',
+        ]);
+        $targetResult->items()->create([
+            'subject_id' => $targetSubject->id,
+            'subject_name' => $targetSubject->name,
+            'obtained_marks' => 176,
+            'total_marks' => 200,
+            'gpa' => 5.00,
+            'grade' => 'A+',
+        ]);
+
+        $this->assertEquals(1, $targetResult->merit_position);
+        $this->assertEquals('Target', $targetResult->program_type);
+
+        // 7. Results index verification
+        $resFilterAcademic = $this->actingAs($this->adminUser)->get(route('admin.results', ['program_type' => 'Academic']));
+        $resFilterAcademic->assertStatus(200);
+        $resFilterAcademic->assertSee('Tanzim Academic Student');
+        $resFilterAcademic->assertSee('GPA 5.00');
+
+        $resFilterTarget = $this->actingAs($this->adminUser)->get(route('admin.results', ['program_type' => 'Target']));
+        $resFilterTarget->assertStatus(200);
+        $resFilterTarget->assertSee('Fahim Target Student');
+        $resFilterTarget->assertSee('Merit: #1');
+
+        // 8. Marksheet Rendering: Academic Marksheet vs Target Scorecard
+        $academicMarksheet = $this->actingAs($this->adminUser)->get(route('admin.results.marksheet', $academicResult->id));
+        $academicMarksheet->assertStatus(200);
+        $academicMarksheet->assertSee('Student Academic Examination Marksheet');
+        $academicMarksheet->assertSee('Official Transcript');
+        $academicMarksheet->assertSee('GPA');
+
+        $targetMarksheet = $this->actingAs($this->adminUser)->get(route('admin.results.marksheet', $targetResult->id));
+        $targetMarksheet->assertStatus(200);
+        $targetMarksheet->assertSee('Target Batch Performance &amp; Merit Position Certificate', false);
+        $targetMarksheet->assertSee('Target Scorecard');
+        $targetMarksheet->assertSee('Merit Position');
+        $targetMarksheet->assertSee('Rank #1');
+        $targetMarksheet->assertSee('QUALIFIED');
+
+        // Clean up
+        $academicResult->items()->delete();
+        $academicResult->delete();
+        $targetResult->items()->delete();
+        $targetResult->delete();
+        $academicExam->delete();
+        $targetExam->delete();
+        $academicSubject->delete();
+        $targetSubject->delete();
+        $academicStudent->delete();
+        $targetStudent->delete();
+        $academicBatch->delete();
+        $targetBatch->delete();
+        $academicClass->delete();
+        $targetClass->delete();
     }
 }

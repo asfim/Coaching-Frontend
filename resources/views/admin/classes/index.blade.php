@@ -18,6 +18,28 @@
   </button>
 </div>
 
+<!-- Program Stream Tabs -->
+<div style="background:#fff;padding:12px 18px;border-radius:var(--radius-lg);border:1px solid var(--border);margin-bottom:20px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+  <span style="font-size:0.85rem;font-weight:700;color:var(--gray-600);margin-right:4px;">
+    <i class="bi bi-diagram-3-fill" style="color:var(--primary);"></i> Program Stream:
+  </span>
+  <a href="{{ route('admin.classes.index') }}" 
+     class="btn {{ !request('class_type') ? 'btn-primary' : 'btn-outline' }} btn-sm" 
+     style="border-radius:20px;padding:6px 16px;font-size:0.85rem;">
+    <i class="bi bi-grid-fill"></i> All Classes ({{ $totalClasses }})
+  </a>
+  <a href="{{ route('admin.classes.index', ['class_type' => 'Academic']) }}" 
+     class="btn {{ request('class_type') === 'Academic' ? 'btn-primary' : 'btn-outline' }} btn-sm" 
+     style="border-radius:20px;padding:6px 16px;font-size:0.85rem;">
+    <i class="bi bi-mortarboard-fill"></i> Academic Class (একাডেমিক - {{ $academicCount }})
+  </a>
+  <a href="{{ route('admin.classes.index', ['class_type' => 'Target']) }}" 
+     class="btn {{ request('class_type') === 'Target' ? 'btn-primary' : 'btn-outline' }} btn-sm" 
+     style="border-radius:20px;padding:6px 16px;font-size:0.85rem;">
+    <i class="bi bi-bullseye"></i> Target Batch (টার্গেট ব্যাচ - {{ $targetCount }})
+  </a>
+</div>
+
 <!-- Stats Bar -->
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
   <div class="stat-card blue">
@@ -69,6 +91,7 @@
     <thead>
       <tr>
         <th>Class Name</th>
+        <th>Program Type</th>
         <th>Code</th>
         <th>Numeric Level</th>
         <th>Total Batches</th>
@@ -83,11 +106,22 @@
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:36px;height:36px;border-radius:8px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;">
-              <i class="bi bi-book"></i>
+            <div style="width:36px;height:36px;border-radius:8px;background:{{ $cls->class_type === 'Target' ? '#fef3c7;color:#b45309' : 'var(--primary-light);color:var(--primary)' }};display:flex;align-items:center;justify-content:center;font-weight:700;">
+              <i class="bi {{ $cls->class_type === 'Target' ? 'bi-bullseye' : 'bi-mortarboard' }}"></i>
             </div>
             <strong>{{ $cls->name }}</strong>
           </div>
+        </td>
+        <td>
+          @if($cls->class_type === 'Target')
+            <span class="badge" style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;">
+              <i class="bi bi-bullseye"></i> Target Batch
+            </span>
+          @else
+            <span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;">
+              <i class="bi bi-mortarboard"></i> Academic Class
+            </span>
+          @endif
         </td>
         <td><span class="badge badge-primary">{{ $cls->code ?: 'N/A' }}</span></td>
         <td><strong>{{ $cls->numeric_level ?: '-' }}</strong></td>
@@ -151,8 +185,16 @@
     <form action="{{ route('admin.classes.store') }}" method="POST">
       @csrf
       <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Program / Stream Type *</label>
+        <select name="class_type" class="form-select" required>
+          <option value="Academic">Academic Class (একাডেমিক ক্লাস - যেমনঃ Class IX, X, XI, XII)</option>
+          <option value="Target">Target Batch (টার্গেট ব্যাচ - যেমনঃ Engineering, Medical, Admission)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:14px;">
         <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class Name *</label>
-        <input type="text" name="name" class="form-control" placeholder="e.g. Class IX, Class X, HSC 1st Year" required>
+        <input type="text" name="name" class="form-control" placeholder="e.g. Class IX, Engineering Target Batch" required>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
@@ -198,6 +240,14 @@
       @csrf
       @method('PUT')
       <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Program / Stream Type *</label>
+        <select name="class_type" id="editClassType" class="form-select" required>
+          <option value="Academic">Academic Class (একাডেমিক ক্লাস)</option>
+          <option value="Target">Target Batch (টার্গেট ব্যাচ)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:14px;">
         <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class Name *</label>
         <input type="text" name="name" id="editClassName" class="form-control" required>
       </div>
@@ -238,6 +288,7 @@
 function openEditClassModal(cls) {
   document.getElementById('editClassModal').style.display = 'flex';
   document.getElementById('editClassForm').action = '/admin/classes/' + cls.id;
+  document.getElementById('editClassType').value = cls.class_type || 'Academic';
   document.getElementById('editClassName').value = cls.name || '';
   document.getElementById('editClassCode').value = cls.code || '';
   document.getElementById('editClassLevel').value = cls.numeric_level || '';

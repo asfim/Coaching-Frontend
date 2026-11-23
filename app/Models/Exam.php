@@ -9,9 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Exam extends Model
 {
     protected $fillable = [
-        'title', 'exam_type', 'exam_type_id', 'batch_id', 'subject', 'subject_id', 'date', 'time',
+        'title', 'program_type', 'exam_type', 'exam_type_id', 'batch_id', 'class_id', 'subject', 'subject_id', 'date', 'time',
         'total_marks', 'pass_marks', 'room', 'status'
     ];
+
+    public function academicClass(): BelongsTo
+    {
+        return $this->belongsTo(AcademicClass::class, 'class_id');
+    }
 
     public function subjectModel(): BelongsTo
     {

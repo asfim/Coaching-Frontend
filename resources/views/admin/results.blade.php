@@ -15,9 +15,34 @@
   <button class="btn btn-primary" onclick="openAddResultModal()"><i class="bi bi-plus-circle"></i> Add / Enter Marks</button>
 </div>
 
+<!-- Program Stream Filter Tabs -->
+<div style="background:#fff;padding:12px 18px;border-radius:var(--radius-lg);border:1px solid var(--border);margin-bottom:20px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+  <span style="font-size:0.85rem;font-weight:700;color:var(--gray-600);margin-right:4px;">
+    <i class="bi bi-diagram-3-fill" style="color:var(--primary);"></i> Result Stream:
+  </span>
+  <a href="{{ route('admin.results') }}" 
+     class="btn {{ !request('program_type') ? 'btn-primary' : 'btn-outline' }} btn-sm" 
+     style="border-radius:20px;padding:6px 16px;font-size:0.85rem;">
+    <i class="bi bi-grid-fill"></i> All Results ({{ $totalResultsCount }})
+  </a>
+  <a href="{{ route('admin.results', array_merge(request()->except('page'), ['program_type' => 'Academic'])) }}" 
+     class="btn {{ request('program_type') === 'Academic' ? 'btn-primary' : 'btn-outline' }} btn-sm" 
+     style="border-radius:20px;padding:6px 16px;font-size:0.85rem;">
+    <i class="bi bi-mortarboard-fill"></i> Academic Class (GPA &amp; Grade - {{ $academicResultsCount }})
+  </a>
+  <a href="{{ route('admin.results', array_merge(request()->except('page'), ['program_type' => 'Target'])) }}" 
+     class="btn {{ request('program_type') === 'Target' ? 'btn-primary' : 'btn-outline' }} btn-sm" 
+     style="border-radius:20px;padding:6px 16px;font-size:0.85rem;">
+    <i class="bi bi-bullseye"></i> Target Batch (Merit &amp; Rank - {{ $targetResultsCount }})
+  </a>
+</div>
+
 <!-- Filter Toolbar -->
 <div style="background:#fff;padding:16px 20px;border-radius:var(--radius-lg);border:1px solid var(--border);margin-bottom:24px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;box-shadow:var(--shadow-sm);">
   <form method="GET" action="{{ route('admin.results') }}" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1;">
+    @if(request('program_type'))
+      <input type="hidden" name="program_type" value="{{ request('program_type') }}">
+    @endif
     <div style="display:flex;align-items:center;gap:8px;">
       <label style="font-size:0.85rem;font-weight:600;color:var(--gray-600);white-space:nowrap;"><i class="bi bi-file-earmark-text"></i> Exam:</label>
       <select name="exam_id" class="form-select" onchange="this.form.submit()" style="padding:6px 12px;font-size:0.88rem;min-width:220px;">
@@ -39,7 +64,7 @@
     </div>
 
     @if(request('exam_id') || request('search'))
-      <a href="{{ route('admin.results') }}" class="btn btn-outline btn-sm" style="color:var(--gray-600);padding:6px 12px;">
+      <a href="{{ request('program_type') ? route('admin.results', ['program_type' => request('program_type')]) : route('admin.results') }}" class="btn btn-outline btn-sm" style="color:var(--gray-600);padding:6px 12px;">
         <i class="bi bi-x-circle"></i> Clear Filters
       </a>
     @endif
@@ -56,12 +81,13 @@
     <thead>
       <tr>
         <th>Student</th>
+        <th>Stream</th>
         <th>Exam</th>
         <th>Subjects &amp; Marks</th>
         <th>Total Marks</th>
         <th>Percentage</th>
-        <th>Avg. GPA</th>
-        <th>Grade</th>
+        <th>GPA / Merit Rank</th>
+        <th>Grade / Status</th>
         <th>Remarks</th>
         <th style="text-align:right;">Actions</th>
       </tr>
@@ -71,6 +97,7 @@
       @php
         $pct = $r->total_marks > 0 ? round(($r->obtained_marks / $r->total_marks) * 100) : 0;
         $itemCount = $r->items->count();
+        $isTarget = ($r->program_type === 'Target') || ($r->exam?->program_type === 'Target') || ($r->student?->program_type === 'Target');
       @endphp
       <tr>
         <td>
@@ -86,6 +113,17 @@
               </div>
             </div>
           </div>
+        </td>
+        <td>
+          @if($isTarget)
+            <span class="badge" style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;font-size:0.75rem;">
+              <i class="bi bi-bullseye"></i> Target Batch
+            </span>
+          @else
+            <span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:0.75rem;">
+              <i class="bi bi-mortarboard"></i> Academic Class
+            </span>
+          @endif
         </td>
         <td>
           <strong style="color:var(--gray-800);">{{ $r->exam?->title ?: 'General Exam' }}</strong>
@@ -121,11 +159,25 @@
             <span style="font-size:0.8rem;font-weight:700;color:var(--gray-700);">{{ $pct }}%</span>
           </div>
         </td>
-        <td><strong style="color:var(--primary);font-size:1rem;">{{ number_format($r->gpa, 2) }}</strong></td>
         <td>
-          <span class="badge {{ $r->grade === 'A+' ? 'badge-success' : ($r->grade === 'F' ? 'badge-danger' : 'badge-primary') }}" style="font-size:0.82rem;font-weight:700;">
-            {{ $r->grade }}
-          </span>
+          @if($isTarget)
+            <span class="badge" style="background:#fef3c7;color:#b45309;font-weight:800;font-size:0.82rem;border:1px solid #fde68a;">
+              <i class="bi bi-trophy-fill" style="color:#d97706;"></i> Merit: #{{ $r->merit_position ?: 1 }}
+            </span>
+          @else
+            <strong style="color:var(--primary);font-size:0.95rem;">GPA {{ number_format($r->gpa, 2) }}</strong>
+          @endif
+        </td>
+        <td>
+          @if($isTarget)
+            <span class="badge badge-success" style="font-size:0.75rem;font-weight:700;">
+              <i class="bi bi-check-circle"></i> Qualified
+            </span>
+          @else
+            <span class="badge {{ $r->grade === 'A+' ? 'badge-success' : ($r->grade === 'F' ? 'badge-danger' : 'badge-primary') }}" style="font-size:0.82rem;font-weight:700;">
+              {{ $r->grade }}
+            </span>
+          @endif
         </td>
         <td><small style="color:var(--gray-600);">{{ Str::limit($r->remarks ?: '-', 20) }}</small></td>
         <td style="text-align:right;">
@@ -179,6 +231,27 @@
 
     <form action="{{ route('admin.results.store') }}" method="POST">
       @csrf
+
+      <!-- Stream & Merit Position Selector -->
+      <div style="margin-bottom:14px;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">
+        <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:#1e3a8a;">
+          <i class="bi bi-diagram-3-fill"></i> Result Stream &amp; Ranking *
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;">
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--gray-600);margin-bottom:4px;font-weight:600;">Stream Type</label>
+            <select name="program_type" id="addResultProgramType" class="form-select">
+              <option value="Academic">Academic Class (GPA 5.0 &amp; Grades)</option>
+              <option value="Target">Target Batch (Merit Position &amp; Rank)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--gray-600);margin-bottom:4px;font-weight:600;">Merit Position / Rank (মেধা স্থান)</label>
+            <input type="number" name="merit_position" id="addMeritPosition" class="form-control" placeholder="e.g. 1, 2, 3..." min="1">
+          </div>
+        </div>
+      </div>
+
       <div style="margin-bottom:14px;">
         <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Select Exam *</label>
         <select name="exam_id" id="addExamSelect" class="form-select" required onchange="onExamSelected(this.value, 'add')">
@@ -288,6 +361,27 @@
     <form id="editResultForm" method="POST">
       @csrf
       @method('PUT')
+
+      <!-- Stream & Merit Position Selector (Edit) -->
+      <div style="margin-bottom:14px;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">
+        <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:#1e3a8a;">
+          <i class="bi bi-diagram-3-fill"></i> Result Stream &amp; Ranking *
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;">
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--gray-600);margin-bottom:4px;font-weight:600;">Stream Type</label>
+            <select name="program_type" id="editResultProgramType" class="form-select">
+              <option value="Academic">Academic Class (GPA 5.0 &amp; Grades)</option>
+              <option value="Target">Target Batch (Merit Position &amp; Rank)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--gray-600);margin-bottom:4px;font-weight:600;">Merit Position / Rank (মেধা স্থান)</label>
+            <input type="number" name="merit_position" id="editMeritPosition" class="form-control" placeholder="e.g. 1, 2, 3..." min="1">
+          </div>
+        </div>
+      </div>
+
       <div style="margin-bottom:14px;">
         <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Exam *</label>
         <select name="exam_id" id="editExamSelect" class="form-select" required onchange="onExamSelected(this.value, 'edit')">
@@ -407,6 +501,8 @@ function openEditResultModal(r) {
   document.getElementById('editResultForm').action = '/admin/results/' + r.id;
   document.getElementById('editExamSelect').value = r.exam_id;
   document.getElementById('editRemarks').value = r.remarks || '';
+  document.getElementById('editResultProgramType').value = r.program_type || 'Academic';
+  document.getElementById('editMeritPosition').value = r.merit_position || '';
 
   if (r.student) {
     selectStudent(r.student, 'edit');
