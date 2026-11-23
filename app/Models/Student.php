@@ -10,9 +10,14 @@ class Student extends Model
 {
     protected $fillable = [
         'student_id', 'name', 'email', 'phone', 'guardian_name', 'guardian_phone',
-        'class_name', 'course_id', 'batch_id', 'admission_date', 'blood_group',
+        'class_name', 'class_id', 'course_id', 'batch_id', 'admission_date', 'blood_group',
         'address', 'avatar', 'status'
     ];
+
+    public function academicClass(): BelongsTo
+    {
+        return $this->belongsTo(AcademicClass::class, 'class_id');
+    }
 
     public function course(): BelongsTo
     {

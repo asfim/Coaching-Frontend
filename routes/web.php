@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\NoticeController;
 use App\Http\Controllers\Admin\SmsController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\ClassController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +78,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/batches', [BatchController::class, 'store'])->name('batches.store');
     Route::put('/batches/{id}', [BatchController::class, 'update'])->name('batches.update');
     Route::delete('/batches/{id}', [BatchController::class, 'destroy'])->name('batches.destroy');
+
+    // Classes CRUD (Requested by user: "Class eita alada add korrar option thakber aladas menute")
+    Route::get('/classes', [ClassController::class, 'index'])->name('classes.index');
+    Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
+    Route::put('/classes/{id}', [ClassController::class, 'update'])->name('classes.update');
+    Route::delete('/classes/{id}', [ClassController::class, 'destroy'])->name('classes.destroy');
 
     // Attendance
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance');

@@ -99,11 +99,10 @@
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class *</label>
           <select name="class_name" class="form-select" required>
-            <option value="Class IX">Class IX</option>
-            <option value="Class X" selected>Class X</option>
-            <option value="Class XI">Class XI</option>
-            <option value="Class XII">Class XII</option>
-            <option value="Admission">University Admission</option>
+            <option value="">Select Academic Class</option>
+            @foreach($classes as $cls)
+              <option value="{{ $cls->name }}" {{ $cls->name === 'Class X' ? 'selected' : '' }}>{{ $cls->name }}</option>
+            @endforeach
           </select>
         </div>
         <div>
@@ -180,11 +179,10 @@
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class *</label>
           <select name="class_name" id="editBatchClass" class="form-select" required>
-            <option value="Class IX">Class IX</option>
-            <option value="Class X">Class X</option>
-            <option value="Class XI">Class XI</option>
-            <option value="Class XII">Class XII</option>
-            <option value="Admission">University Admission</option>
+            <option value="">Select Academic Class</option>
+            @foreach($classes as $cls)
+              <option value="{{ $cls->name }}">{{ $cls->name }}</option>
+            @endforeach
           </select>
         </div>
         <div>

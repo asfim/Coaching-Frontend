@@ -17,6 +17,7 @@ use App\Models\Notice;
 use App\Models\SmsLog;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\AcademicClass;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -24,6 +25,28 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Academic Classes
+        $class9 = AcademicClass::firstOrCreate(
+            ['name' => 'Class IX'],
+            ['code' => 'C09', 'numeric_level' => 9, 'description' => 'SSC Foundation Batch & Core Subjects', 'status' => 'Active']
+        );
+        $class10 = AcademicClass::firstOrCreate(
+            ['name' => 'Class X'],
+            ['code' => 'C10', 'numeric_level' => 10, 'description' => 'SSC Candidate Special Batch & Model Tests', 'status' => 'Active']
+        );
+        $class11 = AcademicClass::firstOrCreate(
+            ['name' => 'Class XI'],
+            ['code' => 'C11', 'numeric_level' => 11, 'description' => 'HSC 1st Year Science, Commerce & Arts', 'status' => 'Active']
+        );
+        $class12 = AcademicClass::firstOrCreate(
+            ['name' => 'Class XII'],
+            ['code' => 'C12', 'numeric_level' => 12, 'description' => 'HSC 2nd Year & Pre-Board Preparation', 'status' => 'Active']
+        );
+        $classAdm = AcademicClass::firstOrCreate(
+            ['name' => 'University Admission'],
+            ['code' => 'ADM', 'numeric_level' => 13, 'description' => 'Varsity, Medical & Engineering Admission Test Preparation', 'status' => 'Active']
+        );
+
         // 1. Courses
         $course1 = Course::create([
             'title' => 'SSC Science Complete Batch 2026',

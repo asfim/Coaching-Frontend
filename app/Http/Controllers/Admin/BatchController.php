@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Course;
+use App\Models\AcademicClass;
 use Illuminate\Http\Request;
 
 class BatchController extends Controller
@@ -19,8 +20,9 @@ class BatchController extends Controller
 
         $batches = $query->paginate(12);
         $courses = Course::all();
+        $classes = AcademicClass::where('status', 'Active')->orderBy('numeric_level')->get();
 
-        return view('admin.batches', compact('batches', 'courses'));
+        return view('admin.batches', compact('batches', 'courses', 'classes'));
     }
 
     public function store(Request $request)
@@ -36,6 +38,11 @@ class BatchController extends Controller
             'max_students' => 'required|integer|min:1',
             'status' => 'required|in:Active,Inactive',
         ]);
+
+        $classObj = AcademicClass::where('name', $validated['class_name'])->first();
+        if ($classObj) {
+            $validated['class_id'] = $classObj->id;
+        }
 
         Batch::create($validated);
 
@@ -57,6 +64,11 @@ class BatchController extends Controller
             'max_students' => 'required|integer|min:1',
             'status' => 'required|in:Active,Inactive',
         ]);
+
+        $classObj = AcademicClass::where('name', $validated['class_name'])->first();
+        if ($classObj) {
+            $validated['class_id'] = $classObj->id;
+        }
 
         $batch->update($validated);
 

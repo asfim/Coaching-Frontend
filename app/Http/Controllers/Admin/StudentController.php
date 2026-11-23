@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Batch;
 use App\Models\Course;
 use App\Models\User;
+use App\Models\AcademicClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -40,8 +41,9 @@ class StudentController extends Controller
         $students = $query->paginate(12);
         $batches = Batch::all();
         $courses = Course::all();
+        $classes = AcademicClass::where('status', 'Active')->orderBy('numeric_level')->get();
 
-        return view('admin.students', compact('students', 'batches', 'courses'));
+        return view('admin.students', compact('students', 'batches', 'courses', 'classes'));
     }
 
     public function store(Request $request)
@@ -67,6 +69,12 @@ class StudentController extends Controller
         $validated['batch_id'] = $request->filled('batch_id') ? $request->batch_id : null;
         $validated['admission_date'] = $request->filled('admission_date') ? $request->admission_date : now()->toDateString();
         $validated['email'] = $request->filled('email') ? $request->email : null;
+
+        // Associate with AcademicClass
+        $classObj = AcademicClass::where('name', $validated['class_name'])->first();
+        if ($classObj) {
+            $validated['class_id'] = $classObj->id;
+        }
 
         // Auto-generate guaranteed unique student ID (STD-2401, STD-2402, ...)
         $maxNum = 2400;

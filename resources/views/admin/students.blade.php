@@ -54,10 +54,9 @@
   </div>
   <select name="class_name" class="form-select" style="width:140px;" onchange="this.form.submit()">
     <option value="">All Classes</option>
-    <option value="Class IX" {{ request('class_name') == 'Class IX' ? 'selected' : '' }}>Class IX</option>
-    <option value="Class X" {{ request('class_name') == 'Class X' ? 'selected' : '' }}>Class X</option>
-    <option value="Class XI" {{ request('class_name') == 'Class XI' ? 'selected' : '' }}>Class XI</option>
-    <option value="Class XII" {{ request('class_name') == 'Class XII' ? 'selected' : '' }}>Class XII</option>
+    @foreach($classes as $cls)
+      <option value="{{ $cls->name }}" {{ request('class_name') == $cls->name ? 'selected' : '' }}>{{ $cls->name }}</option>
+    @endforeach
   </select>
   <select name="batch_id" class="form-select" style="width:150px;" onchange="this.form.submit()">
     <option value="">All Batches</option>
@@ -231,11 +230,10 @@
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class *</label>
           <select name="class_name" class="form-select" required>
-            <option value="Class IX">Class IX</option>
-            <option value="Class X" selected>Class X</option>
-            <option value="Class XI">Class XI</option>
-            <option value="Class XII">Class XII</option>
-            <option value="Admission">University Admission</option>
+            <option value="">Select Class</option>
+            @foreach($classes as $cls)
+              <option value="{{ $cls->name }}" {{ $cls->name === 'Class X' ? 'selected' : '' }}>{{ $cls->name }}</option>
+            @endforeach
           </select>
         </div>
         <div>
@@ -333,11 +331,10 @@
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class *</label>
           <select name="class_name" id="editStudentClass" class="form-select" required>
-            <option value="Class IX">Class IX</option>
-            <option value="Class X">Class X</option>
-            <option value="Class XI">Class XI</option>
-            <option value="Class XII">Class XII</option>
-            <option value="Admission">University Admission</option>
+            <option value="">Select Class</option>
+            @foreach($classes as $cls)
+              <option value="{{ $cls->name }}">{{ $cls->name }}</option>
+            @endforeach
           </select>
         </div>
       </div>

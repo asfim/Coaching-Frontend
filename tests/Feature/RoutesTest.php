@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Teacher;
 use App\Models\Student;
 use App\Models\Notice;
+use App\Models\AcademicClass;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -95,6 +96,7 @@ class RoutesTest extends TestCase
             '/admin/routine',
             '/admin/fees',
             '/admin/invoice',
+            '/admin/classes',
             '/admin/accounts',
             '/admin/notices',
             '/admin/sms',
@@ -389,5 +391,45 @@ class RoutesTest extends TestCase
         $del = $this->actingAs($this->adminUser)->delete(route('admin.notices.destroy', $notice->id));
         $del->assertRedirect(route('admin.notices'));
         $this->assertNull(Notice::find($notice->id));
+    }
+
+    public function test_classes_crud(): void
+    {
+        // 1. Create class
+        $response = $this->actingAs($this->adminUser)->post(route('admin.classes.store'), [
+            'name' => 'Class VIII (Junior)',
+            'code' => 'C08',
+            'numeric_level' => 8,
+            'description' => 'Junior school scholarship batch',
+            'status' => 'Active',
+        ]);
+        $response->assertRedirect(route('admin.classes.index'));
+        $response->assertSessionHas('success');
+
+        $class = AcademicClass::where('name', 'Class VIII (Junior)')->first();
+        $this->assertNotNull($class);
+        $this->assertEquals('C08', $class->code);
+
+        // 2. Update class
+        $up = $this->actingAs($this->adminUser)->put(route('admin.classes.update', $class->id), [
+            'name' => 'Class VIII (Junior Updated)',
+            'code' => 'C08-UPD',
+            'numeric_level' => 8,
+            'description' => 'Updated description',
+            'status' => 'Active',
+        ]);
+        $up->assertRedirect(route('admin.classes.index'));
+        $up->assertSessionHas('success');
+
+        $class->refresh();
+        $this->assertEquals('Class VIII (Junior Updated)', $class->name);
+        $this->assertEquals('C08-UPD', $class->code);
+
+        // 3. Delete class
+        $del = $this->actingAs($this->adminUser)->delete(route('admin.classes.destroy', $class->id));
+        $del->assertRedirect(route('admin.classes.index'));
+        $del->assertSessionHas('success');
+
+        $this->assertNull(AcademicClass::find($class->id));
     }
 }
