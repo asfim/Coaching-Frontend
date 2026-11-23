@@ -9,9 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Exam extends Model
 {
     protected $fillable = [
-        'title', 'exam_type', 'batch_id', 'subject', 'date', 'time',
+        'title', 'exam_type', 'exam_type_id', 'batch_id', 'subject', 'date', 'time',
         'total_marks', 'pass_marks', 'room', 'status'
     ];
+
+    public function typeModel(): BelongsTo
+    {
+        return $this->belongsTo(ExamType::class, 'exam_type_id');
+    }
 
     public function batch(): BelongsTo
     {

@@ -11,6 +11,9 @@ use App\Models\Student;
 use App\Models\Notice;
 use App\Models\AcademicClass;
 use App\Models\CourseCategory;
+use App\Models\Exam;
+use App\Models\Batch;
+use App\Models\ExamType;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -487,5 +490,65 @@ class RoutesTest extends TestCase
 
         // Clean up course
         $course->delete();
+    }
+
+    public function test_exam_types_crud(): void
+    {
+        $batch = Batch::first() ?? Batch::factory()->create();
+
+        // 1. Create Exam Type
+        $response = $this->actingAs($this->adminUser)->post(route('admin.exam.types.store'), [
+            'name' => 'Speed Math Quiz',
+            'description' => 'Fast arithmetic and logic test',
+        ]);
+        $response->assertRedirect(route('admin.exams'));
+        $response->assertSessionHas('success');
+
+        $type = ExamType::where('name', 'Speed Math Quiz')->first();
+        $this->assertNotNull($type);
+        $this->assertEquals('speed-math-quiz', $type->slug);
+
+        // 2. Update Exam Type
+        $up = $this->actingAs($this->adminUser)->put(route('admin.exam.types.update', $type->id), [
+            'name' => 'Speed & Mental Math Quiz',
+            'status' => 'Active',
+            'description' => 'Updated mental calculation test',
+        ]);
+        $up->assertRedirect(route('admin.exams'));
+        $up->assertSessionHas('success');
+
+        $type->refresh();
+        $this->assertEquals('Speed & Mental Math Quiz', $type->name);
+
+        // 3. Schedule an Exam using this dynamic Exam Type
+        $examRes = $this->actingAs($this->adminUser)->post(route('admin.exams.store'), [
+            'title' => 'Weekly Mental Math Challenge #1',
+            'exam_type' => 'Speed & Mental Math Quiz',
+            'batch_id' => $batch->id,
+            'subject' => 'Mathematics',
+            'date' => now()->addDays(5)->toDateString(),
+            'time' => '10:00 AM - 11:00 AM',
+            'total_marks' => 50,
+            'pass_marks' => 20,
+            'room' => 'Hall C',
+            'status' => 'Upcoming',
+        ]);
+        $examRes->assertRedirect(route('admin.exams'));
+        $exam = Exam::where('title', 'Weekly Mental Math Challenge #1')->first();
+        $this->assertNotNull($exam);
+        $this->assertEquals($type->id, $exam->exam_type_id);
+        $this->assertEquals('Speed & Mental Math Quiz', $exam->exam_type);
+
+        // 4. Delete Exam Type (should unassign exam_type_id on exam safely)
+        $del = $this->actingAs($this->adminUser)->delete(route('admin.exam.types.destroy', $type->id));
+        $del->assertRedirect(route('admin.exams'));
+        $del->assertSessionHas('success');
+
+        $this->assertNull(ExamType::find($type->id));
+        $exam->refresh();
+        $this->assertNull($exam->exam_type_id);
+
+        // Clean up exam
+        $exam->delete();
     }
 }

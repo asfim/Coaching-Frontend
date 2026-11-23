@@ -100,6 +100,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::put('/exams/{id}', [ExamController::class, 'update'])->name('exams.update');
     Route::delete('/exams/{id}', [ExamController::class, 'destroy'])->name('exams.destroy');
 
+    // Dynamic Exam Types
+    Route::post('/exam-types', [ExamController::class, 'storeType'])->name('exam.types.store');
+    Route::put('/exam-types/{id}', [ExamController::class, 'updateType'])->name('exam.types.update');
+    Route::delete('/exam-types/{id}', [ExamController::class, 'destroyType'])->name('exam.types.destroy');
+
     // Results CRUD
     Route::get('/results', [ResultController::class, 'index'])->name('results');
     Route::post('/results', [ResultController::class, 'store'])->name('results.store');
