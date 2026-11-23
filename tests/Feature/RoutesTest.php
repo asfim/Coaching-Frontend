@@ -10,6 +10,7 @@ use App\Models\Teacher;
 use App\Models\Student;
 use App\Models\Notice;
 use App\Models\AcademicClass;
+use App\Models\CourseCategory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -431,5 +432,60 @@ class RoutesTest extends TestCase
         $del->assertSessionHas('success');
 
         $this->assertNull(AcademicClass::find($class->id));
+    }
+
+    public function test_course_categories_crud(): void
+    {
+        // 1. Create Course Category
+        $response = $this->actingAs($this->adminUser)->post(route('admin.course.categories.store'), [
+            'name' => 'Olympiad Preparation',
+            'description' => 'Math and Science Olympiad training track',
+        ]);
+        $response->assertRedirect(route('admin.courses'));
+        $response->assertSessionHas('success');
+
+        $cat = CourseCategory::where('name', 'Olympiad Preparation')->first();
+        $this->assertNotNull($cat);
+        $this->assertEquals('olympiad-preparation', $cat->slug);
+
+        // 2. Update Course Category
+        $up = $this->actingAs($this->adminUser)->put(route('admin.course.categories.update', $cat->id), [
+            'name' => 'National Olympiad Preparation',
+            'status' => 'Active',
+            'description' => 'Updated Olympiad coaching details',
+        ]);
+        $up->assertRedirect(route('admin.courses'));
+        $up->assertSessionHas('success');
+
+        $cat->refresh();
+        $this->assertEquals('National Olympiad Preparation', $cat->name);
+
+        // 3. Create a course with this dynamic category
+        $courseRes = $this->actingAs($this->adminUser)->post(route('admin.courses.store'), [
+            'title' => 'Math Olympiad Special 2026',
+            'category' => 'National Olympiad Preparation',
+            'duration' => '6 Months',
+            'fee' => 3000,
+            'seats' => 40,
+            'status' => 'Active',
+            'description' => 'Specialized math problem solving',
+        ]);
+        $courseRes->assertRedirect(route('admin.courses'));
+        $course = Course::where('title', 'Math Olympiad Special 2026')->first();
+        $this->assertNotNull($course);
+        $this->assertEquals($cat->id, $course->category_id);
+        $this->assertEquals('National Olympiad Preparation', $course->category);
+
+        // 4. Delete Course Category (should unassign category_id on course safely)
+        $del = $this->actingAs($this->adminUser)->delete(route('admin.course.categories.destroy', $cat->id));
+        $del->assertRedirect(route('admin.courses'));
+        $del->assertSessionHas('success');
+
+        $this->assertNull(CourseCategory::find($cat->id));
+        $course->refresh();
+        $this->assertNull($course->category_id);
+
+        // Clean up course
+        $course->delete();
     }
 }

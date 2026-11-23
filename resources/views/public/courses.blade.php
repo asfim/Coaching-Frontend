@@ -14,10 +14,9 @@
     <!-- Filter categories -->
     <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
       <a href="{{ route('courses') }}" class="btn {{ !request('category') ? 'btn-primary' : 'btn-outline' }} btn-sm">All Courses</a>
-      <a href="{{ route('courses', ['category' => 'Science']) }}" class="btn {{ request('category') == 'Science' ? 'btn-primary' : 'btn-outline' }} btn-sm">Science</a>
-      <a href="{{ route('courses', ['category' => 'HSC']) }}" class="btn {{ request('category') == 'HSC' ? 'btn-primary' : 'btn-outline' }} btn-sm">HSC</a>
-      <a href="{{ route('courses', ['category' => 'Admission']) }}" class="btn {{ request('category') == 'Admission' ? 'btn-primary' : 'btn-outline' }} btn-sm">Admission</a>
-      <a href="{{ route('courses', ['category' => 'Commerce']) }}" class="btn {{ request('category') == 'Commerce' ? 'btn-primary' : 'btn-outline' }} btn-sm">Commerce</a>
+      @foreach($categories as $cat)
+        <a href="{{ route('courses', ['category' => $cat->name]) }}" class="btn {{ request('category') == $cat->name ? 'btn-primary' : 'btn-outline' }} btn-sm">{{ $cat->name }}</a>
+      @endforeach
     </div>
   </div>
 </section>

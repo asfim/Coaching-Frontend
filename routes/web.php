@@ -73,6 +73,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::put('/courses/{id}', [CourseController::class, 'update'])->name('courses.update');
     Route::delete('/courses/{id}', [CourseController::class, 'destroy'])->name('courses.destroy');
 
+    // Dynamic Course Categories
+    Route::post('/course-categories', [CourseController::class, 'storeCategory'])->name('course.categories.store');
+    Route::put('/course-categories/{id}', [CourseController::class, 'updateCategory'])->name('course.categories.update');
+    Route::delete('/course-categories/{id}', [CourseController::class, 'destroyCategory'])->name('course.categories.destroy');
+
     // Batches CRUD
     Route::get('/batches', [BatchController::class, 'index'])->name('batches');
     Route::post('/batches', [BatchController::class, 'store'])->name('batches.store');

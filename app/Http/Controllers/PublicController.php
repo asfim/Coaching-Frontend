@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\CourseCategory;
 use App\Models\Teacher;
 use App\Models\Notice;
 use App\Models\Student;
@@ -39,7 +40,8 @@ class PublicController extends Controller
         }
 
         $courses = $query->paginate(9);
-        return view('public.courses', compact('courses'));
+        $categories = CourseCategory::where('status', 'Active')->orderBy('name')->get();
+        return view('public.courses', compact('courses', 'categories'));
     }
 
     public function courseDetail($slug = null)
