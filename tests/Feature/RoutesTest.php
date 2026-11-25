@@ -17,6 +17,8 @@ use App\Models\ExamType;
 use App\Models\Result;
 use App\Models\Subject;
 use App\Models\ResultItem;
+use App\Models\Fee;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -982,5 +984,261 @@ class RoutesTest extends TestCase
         $targetBatch->delete();
         $academicClass->delete();
         $targetClass->delete();
+    }
+
+    public function test_student_creation_with_login_and_installment_fees_and_collection(): void
+    {
+        // 1. Create Academic Class for testing
+        $testClass = AcademicClass::create([
+            'name' => 'Class XI Science Fees Test',
+            'numeric_level' => 11,
+            'class_type' => 'Academic',
+            'status' => 'Active',
+        ]);
+
+        // Clean up previous test users/students if any
+        User::where('email', 'sumaiya.login@edumanage.com')->delete();
+        Student::where('email', 'sumaiya.login@edumanage.com')->delete();
+        User::where('email', 'hasan.inst@edumanage.com')->delete();
+        Student::where('email', 'hasan.inst@edumanage.com')->delete();
+
+        // 2. Student Creation with Login Credentials and One-time Fee
+        $respOneTime = $this->actingAs($this->adminUser)->post(route('admin.students.store'), [
+            'name' => 'Sumaiya Rahman',
+            'email' => 'sumaiya.login@edumanage.com',
+            'password' => 'Sumaiya@2026',
+            'phone' => '01711223388',
+            'guardian_name' => 'Rahman Miah',
+            'guardian_phone' => '01711223399',
+            'program_type' => 'Academic',
+            'class_name' => 'Class XI Science Fees Test',
+            'status' => 'Active',
+            'setup_fees' => '1',
+            'fee_type' => 'onetime',
+            'fee_amount' => 5000,
+            'fee_discount' => 500,
+            'fee_paid_amount' => 2000,
+            'fee_payment_method' => 'bKash',
+            'fee_payment_date' => '2026-11-25',
+            'fee_notes' => 'Admission initial pay',
+        ]);
+        $respOneTime->assertRedirect(route('admin.students'));
+        $respOneTime->assertSessionHas('success');
+
+        // Verify Student & User Login account
+        $sumaiya = Student::where('email', 'sumaiya.login@edumanage.com')->first();
+        $this->assertNotNull($sumaiya);
+        $sumaiyaUser = User::where('email', 'sumaiya.login@edumanage.com')->first();
+        $this->assertNotNull($sumaiyaUser);
+        $this->assertEquals('student', $sumaiyaUser->role);
+        $this->assertTrue(Hash::check('Sumaiya@2026', $sumaiyaUser->password));
+
+        // Test login with created student credentials
+        $loginResp = $this->post(route('login.post'), [
+            'login' => 'sumaiya.login@edumanage.com',
+            'password' => 'Sumaiya@2026',
+        ]);
+        $loginResp->assertRedirect(route('student.dashboard'));
+
+        // Test login with Student ID as well
+        $loginIdResp = $this->post(route('login.post'), [
+            'login' => $sumaiya->student_id,
+            'password' => 'Sumaiya@2026',
+        ]);
+        $loginIdResp->assertRedirect(route('student.dashboard'));
+
+        // Verify One-time Fee record
+        $oneTimeFee = Fee::where('student_id', $sumaiya->id)->first();
+        $this->assertNotNull($oneTimeFee);
+        $this->assertEquals('onetime', $oneTimeFee->fee_type);
+        $this->assertEquals(5000, $oneTimeFee->amount);
+        $this->assertEquals(500, $oneTimeFee->discount);
+        $this->assertEquals(2000, $oneTimeFee->paid_amount);
+        $this->assertEquals(2500, $oneTimeFee->due_amount);
+        $this->assertEquals('Partial', $oneTimeFee->status);
+
+        // Verify Accounts income entry
+        $accIncome1 = Account::where('reference', $oneTimeFee->invoice_no)->first();
+        $this->assertNotNull($accIncome1);
+        $this->assertEquals(2000, $accIncome1->amount);
+        $this->assertEquals('income', $accIncome1->type);
+
+        // 3. Student Creation with Installment Fee Plan
+        $respInstallment = $this->actingAs($this->adminUser)->post(route('admin.students.store'), [
+            'name' => 'Hasan Mahmud',
+            'email' => 'hasan.inst@edumanage.com',
+            'password' => 'Hasan@2026',
+            'phone' => '01799887766',
+            'guardian_name' => 'Mahmud Ali',
+            'guardian_phone' => '01799887755',
+            'program_type' => 'Academic',
+            'class_name' => 'Class XI Science Fees Test',
+            'status' => 'Active',
+            'setup_fees' => '1',
+            'fee_type' => 'installment',
+            'total_installments' => 3,
+            'installment_interval' => 'monthly',
+            'fee_amount' => 6000,
+            'fee_discount' => 0,
+            'fee_paid_amount' => 2000,
+            'fee_payment_method' => 'Cash',
+            'fee_payment_date' => '2026-11-25',
+            'fee_notes' => 'Admission installment setup',
+        ]);
+        $respInstallment->assertRedirect(route('admin.students'));
+
+        $hasan = Student::where('email', 'hasan.inst@edumanage.com')->first();
+        $this->assertNotNull($hasan);
+
+        // Verify 3 Installments created
+        $installments = Fee::where('student_id', $hasan->id)->orderBy('installment_no')->get();
+        $this->assertCount(3, $installments);
+
+        // Installment 1: fully paid by down payment
+        $inst1 = $installments[0];
+        $this->assertEquals(1, $inst1->installment_no);
+        $this->assertEquals(3, $inst1->total_installments);
+        $this->assertEquals(2000, $inst1->amount);
+        $this->assertEquals(2000, $inst1->paid_amount);
+        $this->assertEquals(0, $inst1->due_amount);
+        $this->assertEquals('Paid', $inst1->status);
+
+        // Installment 2: Due
+        $inst2 = $installments[1];
+        $this->assertEquals(2, $inst2->installment_no);
+        $this->assertEquals(2000, $inst2->amount);
+        $this->assertEquals(0, $inst2->paid_amount);
+        $this->assertEquals(2000, $inst2->due_amount);
+        $this->assertEquals('Due', $inst2->status);
+
+        // Installment 3: Due
+        $inst3 = $installments[2];
+        $this->assertEquals(3, $inst3->installment_no);
+        $this->assertEquals(2000, $inst3->amount);
+        $this->assertEquals(0, $inst3->paid_amount);
+        $this->assertEquals(2000, $inst3->due_amount);
+        $this->assertEquals('Due', $inst3->status);
+
+        // 4. Fee Collection Flow against Installment 2 ("sei onujai fees collect korte parbe")
+        // Partial collection: 1200 of 2000
+        $payResp = $this->actingAs($this->adminUser)->post(route('admin.fees.pay', $inst2->id), [
+            'paying_amount' => 1200,
+            'payment_method' => 'Nagad',
+            'payment_date' => '2026-11-26',
+            'notes' => 'Partial payment for Inst 2',
+        ]);
+        $payResp->assertRedirect(route('admin.fees'));
+        $payResp->assertSessionHas('success');
+
+        $inst2->refresh();
+        $this->assertEquals(1200, $inst2->paid_amount);
+        $this->assertEquals(800, $inst2->due_amount);
+        $this->assertEquals('Partial', $inst2->status);
+
+        // Verify Accounts income logged
+        $accIncome2 = Account::where('reference', $inst2->invoice_no)->first();
+        $this->assertNotNull($accIncome2);
+        $this->assertEquals(1200, $accIncome2->amount);
+
+        // Complete remaining due of 800
+        $payResp2 = $this->actingAs($this->adminUser)->post(route('admin.fees.pay', $inst2->id), [
+            'paying_amount' => 800,
+            'payment_method' => 'Cash',
+            'payment_date' => '2026-11-27',
+            'notes' => 'Remaining due clear for Inst 2',
+        ]);
+        $payResp2->assertRedirect(route('admin.fees'));
+        $payResp2->assertSessionHas('success');
+
+        $inst2->refresh();
+        $this->assertEquals(2000, $inst2->paid_amount);
+        $this->assertEquals(0, $inst2->due_amount);
+        $this->assertEquals('Paid', $inst2->status);
+
+        // 5. Student Creation with UNLIMITED / ONGOING Installment Plan
+        User::where('email', 'unlimited.student@edumanage.com')->delete();
+        Student::where('email', 'unlimited.student@edumanage.com')->delete();
+
+        $respUnlimited = $this->actingAs($this->adminUser)->post(route('admin.students.store'), [
+            'name' => 'Mehedi Hasan Unlimited',
+            'email' => 'unlimited.student@edumanage.com',
+            'password' => 'Mehedi@2026',
+            'phone' => '01733445566',
+            'class_name' => 'Class XI Science Fees Test',
+            'status' => 'Active',
+            'setup_fees' => '1',
+            'fee_type' => 'installment',
+            'installment_mode' => 'unlimited',
+            'fee_amount' => 2500,
+            'fee_discount' => 0,
+            'fee_paid_amount' => 1500,
+            'fee_payment_method' => 'bKash',
+            'fee_payment_date' => '2026-11-25',
+            'fee_notes' => 'Admission under monthly ongoing plan',
+        ]);
+        $respUnlimited->assertRedirect(route('admin.students'));
+
+        $mehedi = Student::where('email', 'unlimited.student@edumanage.com')->first();
+        $this->assertNotNull($mehedi);
+
+        $unlimitedFee = Fee::where('student_id', $mehedi->id)->first();
+        $this->assertNotNull($unlimitedFee);
+        $this->assertEquals('installment', $unlimitedFee->fee_type);
+        $this->assertEquals(1, $unlimitedFee->installment_no);
+        $this->assertNull($unlimitedFee->total_installments); // null represents unlimited
+        $this->assertEquals(2500, $unlimitedFee->amount);
+        $this->assertEquals(1500, $unlimitedFee->paid_amount);
+        $this->assertEquals(1000, $unlimitedFee->due_amount);
+        $this->assertEquals('Partial', $unlimitedFee->status);
+
+        // Check view rendering in fees table
+        $feesPage = $this->actingAs($this->adminUser)->get(route('admin.fees'));
+        $feesPage->assertStatus(200);
+        $feesPage->assertSee('Inst. 1 (Unlimited)');
+
+        // 6. Student Creation with CUSTOM HIGH installment count (e.g. 15 installments)
+        User::where('email', 'custom.inst@edumanage.com')->delete();
+        Student::where('email', 'custom.inst@edumanage.com')->delete();
+
+        $respCustomCount = $this->actingAs($this->adminUser)->post(route('admin.students.store'), [
+            'name' => 'Custom Count Student',
+            'email' => 'custom.inst@edumanage.com',
+            'password' => 'Custom@2026',
+            'phone' => '01755667788',
+            'class_name' => 'Class XI Science Fees Test',
+            'status' => 'Active',
+            'setup_fees' => '1',
+            'fee_type' => 'installment',
+            'installment_mode' => 'fixed',
+            'total_installments' => 15,
+            'fee_amount' => 15000,
+            'fee_discount' => 0,
+            'fee_paid_amount' => 1000,
+            'fee_payment_method' => 'Cash',
+            'fee_payment_date' => '2026-11-25',
+        ]);
+        $respCustomCount->assertRedirect(route('admin.students'));
+
+        $customStudent = Student::where('email', 'custom.inst@edumanage.com')->first();
+        $this->assertNotNull($customStudent);
+        $customInsts = Fee::where('student_id', $customStudent->id)->get();
+        $this->assertCount(15, $customInsts);
+        $this->assertEquals(15, $customInsts->first()->total_installments);
+
+        // Clean up test data
+        Fee::where('student_id', $sumaiya->id)->delete();
+        Fee::where('student_id', $hasan->id)->delete();
+        Fee::where('student_id', $mehedi->id)->delete();
+        Fee::where('student_id', $customStudent->id)->delete();
+        Account::whereIn('reference', [$oneTimeFee->invoice_no, $inst1->invoice_no, $inst2->invoice_no, $inst3->invoice_no, $unlimitedFee->invoice_no])->delete();
+        $hasanUserId = User::where('student_id', $hasan->id)->value('id');
+        $mehediUserId = User::where('student_id', $mehedi->id)->value('id');
+        $customUserId = User::where('student_id', $customStudent->id)->value('id');
+        User::whereIn('id', array_filter([$sumaiyaUser->id, $hasanUserId, $mehediUserId, $customUserId]))->delete();
+        $sumaiya->delete();
+        $hasan->delete();
+        $mehedi->delete();
+        $customStudent->delete();
+        $testClass->delete();
     }
 }

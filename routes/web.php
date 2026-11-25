@@ -128,6 +128,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Fees CRUD
     Route::get('/fees', [FeeController::class, 'index'])->name('fees');
     Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
+    Route::post('/fees/{id}/pay', [FeeController::class, 'collectPayment'])->name('fees.pay');
     Route::get('/invoice/{id?}', [FeeController::class, 'invoice'])->name('invoice');
     Route::delete('/fees/{id}', [FeeController::class, 'destroy'])->name('fees.destroy');
 

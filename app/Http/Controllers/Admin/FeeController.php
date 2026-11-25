@@ -81,6 +81,50 @@ class FeeController extends Controller
         return redirect()->route('admin.fees')->with('success', 'Fee payment recorded successfully! Invoice generated.');
     }
 
+    public function collectPayment(Request $request, $id)
+    {
+        $fee = Fee::with('student')->findOrFail($id);
+
+        if ($fee->due_amount <= 0) {
+            return redirect()->route('admin.fees')->with('error', 'This invoice is already fully paid!');
+        }
+
+        $validated = $request->validate([
+            'paying_amount' => 'required|numeric|min:0.01|max:' . $fee->due_amount,
+            'payment_method' => 'required|string|max:50',
+            'payment_date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $amountPaid = floatval($validated['paying_amount']);
+        $newPaid = $fee->paid_amount + $amountPaid;
+        $newDue = max(0, $fee->due_amount - $amountPaid);
+
+        $fee->paid_amount = $newPaid;
+        $fee->due_amount = $newDue;
+        $fee->status = ($newDue == 0) ? 'Paid' : 'Partial';
+        $fee->payment_method = $validated['payment_method'];
+        $fee->payment_date = $validated['payment_date'];
+        if (!empty($validated['notes'])) {
+            $fee->notes = ($fee->notes ? $fee->notes . ' | ' : '') . $validated['notes'];
+        }
+        $fee->save();
+
+        // Record in Accounts as income
+        Account::create([
+            'title' => "Due Fee Collection - " . ($fee->student?->name ?? 'Student') . " ({$fee->invoice_no})",
+            'type' => 'income',
+            'category' => 'Student Fee',
+            'amount' => $amountPaid,
+            'payment_method' => $validated['payment_method'],
+            'date' => $validated['payment_date'],
+            'reference' => $fee->invoice_no,
+            'description' => "Due collection for " . ($fee->student?->student_id ?? '') . " ({$fee->month} {$fee->year})",
+        ]);
+
+        return redirect()->route('admin.fees')->with('success', "Payment of ৳" . number_format($amountPaid, 2) . " collected successfully for invoice {$fee->invoice_no}!");
+    }
+
     public function invoice($id = null)
     {
         $fee = $id ? Fee::with(['student.batch', 'batch'])->findOrFail($id)

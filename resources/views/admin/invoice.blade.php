@@ -67,8 +67,22 @@
     <tbody>
       <tr style="border-bottom:1px solid var(--border);">
         <td style="padding:14px 12px;">
-          <strong>Monthly Coaching Tuition Fee — {{ $fee->month }} {{ $fee->year }}</strong>
-          <div style="font-size:0.75rem;color:var(--gray-500);">Comprehensive academic coaching &amp; exam evaluation</div>
+          <strong>
+            @if($fee->fee_type === 'installment')
+              Coaching Tuition Fee — Installment ({{ $fee->installment_no }}{{ !empty($fee->total_installments) ? ' of ' . $fee->total_installments : ' - Unlimited / Ongoing' }})
+            @elseif($fee->fee_type === 'onetime')
+              One-time Admission &amp; Tuition Fee
+            @else
+              Monthly Coaching Tuition Fee
+            @endif
+            — {{ $fee->month }} {{ $fee->year }}
+          </strong>
+          <div style="font-size:0.75rem;color:var(--gray-500);">
+            {{ $fee->notes ?: 'Academic coaching, examination, and instructional fee' }}
+            @if($fee->due_date)
+              &nbsp;|&nbsp; <strong>Due Date:</strong> {{ \Carbon\Carbon::parse($fee->due_date)->format('d M Y') }}
+            @endif
+          </div>
         </td>
         <td style="padding:14px 12px;text-align:right;">৳{{ number_format($fee->amount, 2) }}</td>
         <td style="padding:14px 12px;text-align:right;color:var(--danger);">-৳{{ number_format($fee->discount, 2) }}</td>

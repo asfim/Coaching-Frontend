@@ -85,7 +85,29 @@
           <div>{{ $f->student?->class_name }}</div>
           <span class="badge badge-primary" style="font-size:0.7rem;">{{ $f->batch?->batch_code ?: '-' }}</span>
         </td>
-        <td><strong>{{ $f->month }} {{ $f->year }}</strong></td>
+        <td>
+          <strong>{{ $f->month }} {{ $f->year }}</strong>
+          @if($f->fee_type === 'installment')
+            <div>
+              <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.7rem;font-weight:600;display:inline-block;margin-top:2px;">
+                @if(!empty($f->total_installments))
+                  <i class="bi bi-clock-history"></i> Inst. {{ $f->installment_no }}/{{ $f->total_installments }}
+                @else
+                  <i class="bi bi-infinity"></i> Inst. {{ $f->installment_no }} (Unlimited)
+                @endif
+              </span>
+            </div>
+          @elseif($f->fee_type === 'onetime')
+            <div>
+              <span class="badge" style="background:#ecfdf5;color:#047857;font-size:0.7rem;font-weight:600;display:inline-block;margin-top:2px;">
+                <i class="bi bi-wallet2"></i> One-time
+              </span>
+            </div>
+          @endif
+          @if($f->due_date)
+            <small style="color:var(--gray-500);font-size:0.68rem;display:block;">Due: {{ \Carbon\Carbon::parse($f->due_date)->format('d M Y') }}</small>
+          @endif
+        </td>
         <td>৳{{ number_format($f->amount - $f->discount, 2) }}</td>
         <td><strong style="color:var(--success);">৳{{ number_format($f->paid_amount, 2) }}</strong></td>
         <td>
@@ -103,6 +125,11 @@
         </td>
         <td>
           <div class="action-btns">
+            @if($f->due_amount > 0)
+              <button type="button" class="btn btn-success btn-icon btn-sm" onclick='openCollectDueModal(@json($f))' title="Collect Payment / বকেয়া গ্রহণ">
+                <i class="bi bi-cash"></i>
+              </button>
+            @endif
             <a href="{{ route('admin.invoice', $f->id) }}" class="btn btn-primary btn-icon btn-sm" title="Print Invoice">
               <i class="bi bi-printer"></i>
             </a>
@@ -209,4 +236,98 @@
     </form>
   </div>
 </div>
+
+<!-- Collect Due Payment Modal -->
+<div id="collectDueModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:500px;padding:24px;box-shadow:var(--shadow-xl);position:relative;margin:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h4 style="margin:0;font-weight:700;"><i class="bi bi-cash-stack" style="color:var(--success);"></i> Collect Due Payment (বকেয়া আদায়)</h4>
+      <button onclick="document.getElementById('collectDueModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <!-- Student & Invoice Info Card -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:0.85rem;color:var(--gray-600);">Student:</span>
+        <strong id="dueModalStudentName" style="font-size:0.85rem;">-</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:0.85rem;color:var(--gray-600);">Invoice No:</span>
+        <code id="dueModalInvoiceNo">-</code>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:0.85rem;color:var(--gray-600);">Billing Month / Plan:</span>
+        <span id="dueModalPlan" style="font-size:0.85rem;font-weight:600;color:#1e40af;">-</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1;">
+        <span style="font-size:0.9rem;font-weight:700;color:var(--danger);">Current Due (বকেয়া):</span>
+        <strong id="dueModalDueAmount" style="font-size:1.05rem;color:var(--danger);">৳0.00</strong>
+      </div>
+    </div>
+
+    <form id="collectDueForm" method="POST">
+      @csrf
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">
+          Collecting Amount (আদায়কৃত টাকা ৳) *
+        </label>
+        <input type="number" step="0.01" name="paying_amount" id="dueModalPayingAmount" class="form-control" required>
+        <small style="color:var(--gray-500);font-size:0.72rem;">Can be full due or partial payment</small>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Payment Method *</label>
+          <select name="payment_method" class="form-select" required>
+            <option value="Cash">Cash (নগদ)</option>
+            <option value="bKash">bKash (বিকাশ)</option>
+            <option value="Nagad">Nagad (নগদ)</option>
+            <option value="Bank">Bank Deposit (ব্যাংক)</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Payment Date *</label>
+          <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Notes / Trx ID</label>
+        <input type="text" name="notes" class="form-control" placeholder="e.g. Received by Admin, TrxID: ...">
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('collectDueModal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Confirm &amp; Collect</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openCollectDueModal(fee) {
+  document.getElementById('collectDueModal').style.display = 'flex';
+  document.getElementById('collectDueForm').action = '/admin/fees/' + fee.id + '/pay';
+  document.getElementById('dueModalStudentName').textContent = (fee.student ? (fee.student.name + ' (#' + fee.student.student_id + ')') : 'Student');
+  document.getElementById('dueModalInvoiceNo').textContent = fee.invoice_no;
+
+  let planDesc = fee.month + ' ' + fee.year;
+  if (fee.fee_type === 'installment') {
+    if (fee.total_installments) {
+      planDesc += ' (Installment ' + (fee.installment_no || 1) + '/' + fee.total_installments + ')';
+    } else {
+      planDesc += ' (Installment ' + (fee.installment_no || 1) + ' - Unlimited / Ongoing)';
+    }
+  } else if (fee.fee_type === 'onetime') {
+    planDesc += ' (One-time)';
+  }
+  document.getElementById('dueModalPlan').textContent = planDesc;
+
+  const due = parseFloat(fee.due_amount) || 0;
+  document.getElementById('dueModalDueAmount').textContent = '৳' + due.toFixed(2);
+  const payInput = document.getElementById('dueModalPayingAmount');
+  payInput.value = due.toFixed(2);
+  payInput.max = due.toFixed(2);
+}
+</script>
 @endsection

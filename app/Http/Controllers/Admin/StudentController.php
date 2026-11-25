@@ -8,6 +8,8 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\AcademicClass;
+use App\Models\Fee;
+use App\Models\Account;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -62,6 +64,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
+            'password' => 'nullable|string|min:4|max:100',
             'phone' => 'required|string|max:20',
             'guardian_name' => 'nullable|string|max:255',
             'guardian_phone' => 'nullable|string|max:20',
@@ -74,13 +77,25 @@ class StudentController extends Controller
             'address' => 'nullable|string',
             'status' => 'required|in:Active,Inactive,Completed',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
+
+            // Fee Setup attributes
+            'setup_fees' => 'nullable',
+            'fee_type' => 'nullable|in:onetime,installment',
+            'installment_mode' => 'nullable|in:fixed,unlimited',
+            'fee_amount' => 'nullable|numeric|min:0',
+            'fee_discount' => 'nullable|numeric|min:0',
+            'fee_paid_amount' => 'nullable|numeric|min:0',
+            'fee_payment_method' => 'nullable|string|max:50',
+            'fee_payment_date' => 'nullable|date',
+            'fee_notes' => 'nullable|string|max:255',
+            'total_installments' => 'nullable|integer|min:1|max:999',
+            'installment_interval' => 'nullable|in:monthly,bi_monthly',
         ]);
 
         // Clean nullable relationships
         $validated['course_id'] = $request->filled('course_id') ? $request->course_id : null;
         $validated['batch_id'] = $request->filled('batch_id') ? $request->batch_id : null;
         $validated['admission_date'] = $request->filled('admission_date') ? $request->admission_date : now()->toDateString();
-        $validated['email'] = $request->filled('email') ? $request->email : null;
 
         // Associate with AcademicClass and deduce program_type
         $classObj = AcademicClass::where('name', $validated['class_name'])->first();
@@ -109,6 +124,12 @@ class StudentController extends Controller
         }
         $validated['student_id'] = 'STD-' . ($maxNum + 1);
 
+        // Set or auto-generate login email
+        $loginEmail = $request->filled('email') 
+            ? trim($request->email) 
+            : strtolower(str_replace('-', '', $validated['student_id'])) . '@student.com';
+        $validated['email'] = $loginEmail;
+
         // Avatar upload handling
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
@@ -117,25 +138,193 @@ class StudentController extends Controller
             $validated['avatar'] = 'images/student_female_profile_1790497748277.jpg';
         }
 
+        // Create student record
         $student = Student::create($validated);
 
-        // Auto-create student user account for login if email is given
-        if (!empty($student->email)) {
-            User::firstOrCreate(
-                ['email' => $student->email],
-                [
-                    'name' => $student->name,
-                    'password' => Hash::make('password'),
-                    'role' => 'student',
-                    'phone' => $student->phone,
+        // Create or update login account for the student
+        $plainPassword = $request->filled('password') ? $request->password : '123456';
+        User::updateOrCreate(
+            ['email' => $loginEmail],
+            [
+                'name' => $student->name,
+                'password' => Hash::make($plainPassword),
+                'role' => 'student',
+                'phone' => $student->phone,
+                'student_id' => $student->id,
+                'avatar' => $student->avatar,
+                'status' => 'active',
+            ]
+        );
+
+        // Process Fee Setup if opted in and amount provided
+        if ($request->filled('setup_fees') && $request->filled('fee_amount') && floatval($request->fee_amount) > 0) {
+            $feeType = $request->input('fee_type', 'onetime');
+            $totalAmount = floatval($request->fee_amount);
+            $discount = floatval($request->input('fee_discount', 0));
+            $payable = max(0, $totalAmount - $discount);
+            $paidNow = floatval($request->input('fee_paid_amount', 0));
+            $paymentMethod = $request->input('fee_payment_method', 'Cash');
+            $paymentDate = $request->input('fee_payment_date', now()->toDateString());
+            $feeNotes = $request->input('fee_notes', '');
+
+            if ($feeType === 'installment') {
+                $isUnlimited = ($request->input('installment_mode') === 'unlimited') || empty($request->input('total_installments'));
+
+                if ($isUnlimited) {
+                    // Unlimited / Ongoing Installment: creates Installment #1 with total_installments = null (representing unlimited/ongoing plan)
+                    $paid = min($payable, $paidNow);
+                    $due = max(0, $payable - $paid);
+                    $status = ($due == 0) ? 'Paid' : (($paid > 0) ? 'Partial' : 'Due');
+
+                    $lastFee = Fee::latest('id')->first();
+                    $nextId = $lastFee ? ($lastFee->id + 1) : 1;
+                    $invNo = 'INV-' . date('Y') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+
+                    $fee = Fee::create([
+                        'invoice_no' => $invNo,
+                        'student_id' => $student->id,
+                        'batch_id' => $student->batch_id,
+                        'fee_type' => 'installment',
+                        'installment_no' => 1,
+                        'total_installments' => null, // null represents unlimited / ongoing
+                        'month' => date('F', strtotime($paymentDate)),
+                        'year' => intval(date('Y', strtotime($paymentDate))),
+                        'amount' => $totalAmount,
+                        'discount' => $discount,
+                        'paid_amount' => $paid,
+                        'due_amount' => $due,
+                        'payment_method' => $paymentMethod,
+                        'payment_date' => $paid > 0 ? $paymentDate : null,
+                        'due_date' => $paymentDate,
+                        'status' => $status,
+                        'notes' => 'Installment 1 (Unlimited / Ongoing)' . ($feeNotes ? " - {$feeNotes}" : ''),
+                    ]);
+
+                    if ($paid > 0) {
+                        Account::create([
+                            'title' => "Fee Collection - {$student->name} (Installment 1 - Unlimited)",
+                            'type' => 'income',
+                            'category' => 'Student Fee',
+                            'amount' => $paid,
+                            'payment_method' => $paymentMethod,
+                            'date' => $paymentDate,
+                            'reference' => $invNo,
+                            'description' => "Installment 1 (Unlimited / Ongoing) fee collection for {$student->student_id}",
+                        ]);
+                    }
+                } else {
+                    // Fixed installments: can be any count (e.g. 2, 3, 5, 8, 10, 12, 18, 24, 36...)
+                    $numInstallments = max(1, min(999, intval($request->input('total_installments', 3))));
+                    $intervalMonths = ($request->input('installment_interval') === 'bi_monthly') ? 2 : 1;
+
+                    $instPayable = round($payable / $numInstallments, 2);
+                    $lastInstPayable = round($payable - ($instPayable * ($numInstallments - 1)), 2);
+
+                    $instAmount = round($totalAmount / $numInstallments, 2);
+                    $lastInstAmount = round($totalAmount - ($instAmount * ($numInstallments - 1)), 2);
+
+                    $instDiscount = round($discount / $numInstallments, 2);
+                    $lastInstDiscount = round($discount - ($instDiscount * ($numInstallments - 1)), 2);
+
+                    $remainingPaid = $paidNow;
+
+                    for ($i = 1; $i <= $numInstallments; $i++) {
+                        $thisPayable = ($i == $numInstallments) ? $lastInstPayable : $instPayable;
+                        $thisAmount = ($i == $numInstallments) ? $lastInstAmount : $instAmount;
+                        $thisDiscount = ($i == $numInstallments) ? $lastInstDiscount : $instDiscount;
+
+                        $thisPaid = min($thisPayable, max(0, $remainingPaid));
+                        $remainingPaid -= $thisPaid;
+                        $thisDue = max(0, $thisPayable - $thisPaid);
+                        $thisStatus = ($thisDue == 0) ? 'Paid' : (($thisPaid > 0) ? 'Partial' : 'Due');
+
+                        $offsetMonths = ($i - 1) * $intervalMonths;
+                        $dueDate = date('Y-m-d', strtotime("+{$offsetMonths} month", strtotime($paymentDate)));
+                        $month = date('F', strtotime($dueDate));
+                        $year = intval(date('Y', strtotime($dueDate)));
+
+                        $lastFee = Fee::latest('id')->first();
+                        $nextId = $lastFee ? ($lastFee->id + 1) : 1;
+                        $invNo = 'INV-' . date('Y') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+
+                        $fee = Fee::create([
+                            'invoice_no' => $invNo,
+                            'student_id' => $student->id,
+                            'batch_id' => $student->batch_id,
+                            'fee_type' => 'installment',
+                            'installment_no' => $i,
+                            'total_installments' => $numInstallments,
+                            'month' => $month,
+                            'year' => $year,
+                            'amount' => $thisAmount,
+                            'discount' => $thisDiscount,
+                            'paid_amount' => $thisPaid,
+                            'due_amount' => $thisDue,
+                            'payment_method' => $paymentMethod,
+                            'payment_date' => $thisPaid > 0 ? $paymentDate : null,
+                            'due_date' => $dueDate,
+                            'status' => $thisStatus,
+                            'notes' => "Installment {$i}/{$numInstallments}" . ($feeNotes ? " - {$feeNotes}" : ""),
+                        ]);
+
+                        if ($thisPaid > 0) {
+                            Account::create([
+                                'title' => "Fee Collection - {$student->name} (Installment {$i}/{$numInstallments})",
+                                'type' => 'income',
+                                'category' => 'Student Fee',
+                                'amount' => $thisPaid,
+                                'payment_method' => $paymentMethod,
+                                'date' => $paymentDate,
+                                'reference' => $invNo,
+                                'description' => "Installment {$i}/{$numInstallments} fee collection for {$student->student_id}",
+                            ]);
+                        }
+                    }
+                }
+            } else {
+                // One-time payment
+                $paid = min($payable, $paidNow);
+                $due = max(0, $payable - $paid);
+                $status = ($due == 0) ? 'Paid' : (($paid > 0) ? 'Partial' : 'Due');
+
+                $lastFee = Fee::latest('id')->first();
+                $nextId = $lastFee ? ($lastFee->id + 1) : 1;
+                $invNo = 'INV-' . date('Y') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+
+                $fee = Fee::create([
+                    'invoice_no' => $invNo,
                     'student_id' => $student->id,
-                    'avatar' => $student->avatar,
-                    'status' => 'active',
-                ]
-            );
+                    'batch_id' => $student->batch_id,
+                    'fee_type' => 'onetime',
+                    'month' => date('F', strtotime($paymentDate)),
+                    'year' => intval(date('Y', strtotime($paymentDate))),
+                    'amount' => $totalAmount,
+                    'discount' => $discount,
+                    'paid_amount' => $paid,
+                    'due_amount' => $due,
+                    'payment_method' => $paymentMethod,
+                    'payment_date' => $paid > 0 ? $paymentDate : null,
+                    'due_date' => $paymentDate,
+                    'status' => $status,
+                    'notes' => $feeNotes ?: 'One-time admission & tuition fee',
+                ]);
+
+                if ($paid > 0) {
+                    Account::create([
+                        'title' => "Fee Collection - {$student->name} (One-time Admission)",
+                        'type' => 'income',
+                        'category' => 'Student Fee',
+                        'amount' => $paid,
+                        'payment_method' => $paymentMethod,
+                        'date' => $paymentDate,
+                        'reference' => $invNo,
+                        'description' => "One-time admission fee collection for {$student->student_id}",
+                    ]);
+                }
+            }
         }
 
-        return redirect()->route('admin.students')->with('success', 'Student ' . $student->name . ' (' . $student->student_id . ') added successfully!');
+        return redirect()->route('admin.students')->with('success', 'Student ' . $student->name . ' (' . $student->student_id . ') added successfully! Login credentials generated.');
     }
 
     public function show($id = null)
@@ -165,6 +354,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
+            'password' => 'nullable|string|min:4|max:100',
             'phone' => 'required|string|max:20',
             'guardian_name' => 'nullable|string|max:255',
             'guardian_phone' => 'nullable|string|max:20',
@@ -180,7 +370,7 @@ class StudentController extends Controller
 
         $validated['course_id'] = $request->filled('course_id') ? $request->course_id : null;
         $validated['batch_id'] = $request->filled('batch_id') ? $request->batch_id : null;
-        $validated['email'] = $request->filled('email') ? $request->email : null;
+        $validated['email'] = $request->filled('email') ? $request->email : $student->email;
 
         $classObj = AcademicClass::where('name', $validated['class_name'])->first();
         if ($classObj) {
@@ -202,12 +392,32 @@ class StudentController extends Controller
 
         $student->update($validated);
 
+        // Update student user login details if user exists
+        $user = User::where('student_id', $student->id)
+                    ->orWhere('email', $student->email)
+                    ->first();
+        if ($user) {
+            $userData = [
+                'name' => $student->name,
+                'phone' => $student->phone,
+                'avatar' => $student->avatar,
+            ];
+            if (!empty($student->email)) {
+                $userData['email'] = $student->email;
+            }
+            if ($request->filled('password')) {
+                $userData['password'] = Hash::make($request->password);
+            }
+            $user->update($userData);
+        }
+
         return redirect()->route('admin.students')->with('success', 'Student updated successfully!');
     }
 
     public function destroy($id)
     {
         $student = Student::findOrFail($id);
+        User::where('student_id', $student->id)->delete();
         $student->delete();
 
         return redirect()->route('admin.students')->with('success', 'Student deleted successfully!');

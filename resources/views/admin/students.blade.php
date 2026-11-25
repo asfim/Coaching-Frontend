@@ -255,9 +255,22 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
-          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Email</label>
-          <input type="email" name="email" class="form-control" placeholder="student@example.com">
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">
+            <i class="bi bi-envelope-at-fill" style="color:var(--primary);"></i> Login Email *
+          </label>
+          <input type="email" name="email" id="addStudentEmail" class="form-control" placeholder="student@example.com">
+          <small style="color:var(--gray-500);font-size:0.72rem;">Student login ID (Student Portal)</small>
         </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">
+            <i class="bi bi-key-fill" style="color:var(--primary);"></i> Login Password *
+          </label>
+          <input type="text" name="password" id="addStudentPassword" class="form-control" value="123456" placeholder="Enter password (default: 123456)">
+          <small style="color:var(--gray-500);font-size:0.72rem;">Initial login password for student</small>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Blood Group</label>
           <select name="blood_group" class="form-select">
@@ -267,6 +280,10 @@
             <option value="O+">O+</option><option value="O-">O-</option>
             <option value="AB+">AB+</option><option value="AB-">AB-</option>
           </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
+          <input type="text" name="address" class="form-control" placeholder="Residential address">
         </div>
       </div>
 
@@ -318,17 +335,144 @@
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-        <div>
-          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Status *</label>
-          <select name="status" class="form-select" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Status *</label>
+        <select name="status" class="form-select" required>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+
+      <!-- Admission & Tuition Fee Setup Section -->
+      <div style="margin-top:10px;margin-bottom:16px;background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #cbd5e1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:700;color:#1e3a8a;margin:0;cursor:pointer;">
+            <input type="checkbox" name="setup_fees" id="addStudentSetupFees" value="1" checked onchange="toggleStudentFeeSection()">
+            <span><i class="bi bi-cash-stack"></i> Student Fees &amp; Payment Plan (ফি ও কিস্তি নির্ধারণ)</span>
+          </label>
+          <span class="badge badge-primary" style="font-size:0.72rem;">Optional</span>
         </div>
-        <div>
-          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
-          <input type="text" name="address" class="form-control" placeholder="Residential address">
+
+        <div id="studentFeeSectionWrapper">
+          <!-- Fee Type: One-time vs Installment -->
+          <div style="margin-bottom:12px;background:#ffffff;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;">
+            <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:#334155;">
+              Payment Plan (পেমেন্ট পদ্ধতি) *
+            </label>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;font-size:0.85rem;">
+                <input type="radio" name="fee_type" value="onetime" checked onchange="toggleFeePlanType(this.value)">
+                <span style="color:#047857;"><i class="bi bi-wallet2"></i> One-time (এককালীন)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;font-size:0.85rem;">
+                <input type="radio" name="fee_type" value="installment" onchange="toggleFeePlanType(this.value)">
+                <span style="color:#b45309;"><i class="bi bi-calendar3-range"></i> Installment (কিস্তি)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Total Fee & Discount -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Total Fee (মোট ফি ৳) *</label>
+              <input type="number" step="0.01" name="fee_amount" id="addFeeAmount" class="form-control" placeholder="e.g. 6000" oninput="recalcStudentFee()">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Discount (ছাড় ৳)</label>
+              <input type="number" step="0.01" name="fee_discount" id="addFeeDiscount" class="form-control" value="0" oninput="recalcStudentFee()">
+            </div>
+          </div>
+
+          <!-- Installment Options (Shown when Installment is picked) -->
+          <div id="installmentConfigBox" style="display:none;background:#fefce8;border:1px solid #fef08a;padding:14px;border-radius:8px;margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+              <div>
+                <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;color:#854d0e;">
+                  Installment Mode (কিস্তির ধরন) *
+                </label>
+                <select name="installment_mode" id="addInstallmentMode" class="form-select" onchange="toggleInstallmentMode()">
+                  <option value="fixed" selected>Fixed Count (নির্দিষ্ট কিস্তি)</option>
+                  <option value="unlimited">∞ Unlimited / Ongoing (অনির্দিষ্ট / চলমান কিস্তি)</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;color:#854d0e;">
+                  Installment Frequency (ব্যবধন)
+                </label>
+                <select name="installment_interval" id="addInstallmentInterval" class="form-select" onchange="recalcStudentFee()">
+                  <option value="monthly" selected>Monthly (প্রতি মাসে ১টি কিস্তি)</option>
+                  <option value="bi_monthly">Every 2 Months (২ মাস পর পর)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Fixed count row (can enter any number, plus quick presets) -->
+            <div id="fixedCountRow" style="margin-bottom:10px;">
+              <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;color:#854d0e;">
+                Number of Installments (মোট কিস্তি) *
+              </label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="number" min="1" max="120" name="total_installments" id="addTotalInstallments" class="form-control" value="3" placeholder="Enter any number (e.g. 3, 6, 10, 12, 24...)" oninput="recalcStudentFee()">
+                <select id="quickCountSelect" class="form-select" style="max-width:140px;" onchange="setQuickCount(this.value)">
+                  <option value="">Quick Presets</option>
+                  <option value="2">2 কিস্তি</option>
+                  <option value="3">3 কিস্তি</option>
+                  <option value="4">4 কিস্তি</option>
+                  <option value="5">5 কিস্তি</option>
+                  <option value="6">6 কিস্তি</option>
+                  <option value="8">8 কিস্তি</option>
+                  <option value="10">10 কিস্তি</option>
+                  <option value="12">12 কিস্তি</option>
+                  <option value="18">18 কিস্তি</option>
+                  <option value="24">24 কিস্তি</option>
+                </select>
+              </div>
+              <small style="font-size:0.72rem;color:#a16207;display:block;margin-top:2px;">
+                ইচ্ছামতো যে কোনো কিস্তির সংখ্যা টাইপ করতে পারেন (যেমন: ৩, ৬, ৮, ১২, ১৮, ২৪ ইত্যাদি)
+              </small>
+            </div>
+
+            <!-- Unlimited Mode Info -->
+            <div id="unlimitedInfoRow" style="display:none;margin-bottom:10px;padding:8px 12px;background:#fef08a;border-radius:6px;color:#713f12;font-size:0.8rem;line-height:1.4;">
+              <i class="bi bi-infinity" style="font-size:1rem;margin-right:4px;"></i> <strong>Unlimited / Ongoing Plan:</strong> কিস্তির কোনো নির্দিষ্ট সীমা নেই। কোর্স চলাকালীন প্রতি মাসে চলমান থাকবে। ভর্তি ফি দিয়ে প্রথম কিস্তি সক্রিয় হবে এবং প্রতি মাসে বকেয়া ফি আদায় করা যাবে।
+            </div>
+
+            <div id="installmentPlanPreview" style="font-size:0.78rem;color:#713f12;font-weight:600;padding:6px 8px;background:rgba(254, 240, 138, 0.4);border-radius:4px;">
+              Enter total fee to preview installment breakdown.
+            </div>
+          </div>
+
+          <!-- Paid Now & Method -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Paid Amount Now (বর্তমানে জমা ৳)</label>
+              <input type="number" step="0.01" name="fee_paid_amount" id="addFeePaidAmount" class="form-control" value="0" placeholder="0.00" oninput="recalcStudentFee()">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Payment Method *</label>
+              <select name="fee_payment_method" class="form-select">
+                <option value="Cash">Cash (নগদ)</option>
+                <option value="bKash">bKash (বিকাশ)</option>
+                <option value="Nagad">Nagad (নগদ)</option>
+                <option value="Bank">Bank Deposit (ব্যাংক)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Payment Date & Notes -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Payment Date</label>
+              <input type="date" name="fee_payment_date" class="form-control" value="{{ date('Y-m-d') }}">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;">Notes / Trx ID</label>
+              <input type="text" name="fee_notes" class="form-control" placeholder="e.g. Admission down payment">
+            </div>
+          </div>
+
+          <div id="feeCalculationSummary" style="margin-top:10px;padding:8px 12px;border-radius:6px;background:#e0f2fe;color:#0369a1;font-size:0.8rem;font-weight:600;display:none;">
+          </div>
         </div>
       </div>
 
@@ -397,15 +541,36 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
-          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Email</label>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">
+            <i class="bi bi-envelope-at-fill" style="color:var(--primary);"></i> Email (Login ID)
+          </label>
           <input type="email" name="email" id="editStudentEmail" class="form-control">
         </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">
+            <i class="bi bi-key-fill" style="color:var(--primary);"></i> Reset Password
+          </label>
+          <input type="text" name="password" id="editStudentPassword" class="form-control" placeholder="Leave empty to keep current password">
+          <small style="color:var(--gray-500);font-size:0.72rem;">Type new password to change</small>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Class / Target Program *</label>
           <select name="class_name" id="editStudentClass" class="form-select" required>
             <option value="">Select Class</option>
             @foreach($classes as $cls)
               <option value="{{ $cls->name }}" data-stream="{{ $cls->class_type ?? 'Academic' }}">{{ $cls->name }} ({{ $cls->class_type ?? 'Academic' }})</option>
+            @endforeach
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Batch</label>
+          <select name="batch_id" id="editStudentBatch" class="form-select">
+            <option value="">Select Batch (Optional)</option>
+            @foreach($batches as $b)
+              <option value="{{ $b->id }}" data-stream="{{ $b->program_type ?? 'Academic' }}">{{ $b->name }} ({{ $b->batch_code }}) [{{ $b->program_type ?? 'Academic' }}]</option>
             @endforeach
           </select>
         </div>
@@ -424,15 +589,6 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div>
-          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Batch</label>
-          <select name="batch_id" id="editStudentBatch" class="form-select">
-            <option value="">Select Batch (Optional)</option>
-            @foreach($batches as $b)
-              <option value="{{ $b->id }}" data-stream="{{ $b->program_type ?? 'Academic' }}">{{ $b->name }} ({{ $b->batch_code }}) [{{ $b->program_type ?? 'Academic' }}]</option>
-            @endforeach
-          </select>
-        </div>
-        <div>
           <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Status *</label>
           <select name="status" id="editStudentStatus" class="form-select" required>
             <option value="Active">Active</option>
@@ -440,11 +596,10 @@
             <option value="Completed">Completed</option>
           </select>
         </div>
-      </div>
-
-      <div style="margin-bottom:18px;">
-        <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
-        <textarea name="address" id="editStudentAddress" class="form-control" rows="2"></textarea>
+        <div>
+          <label style="display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;">Address</label>
+          <input type="text" name="address" id="editStudentAddress" class="form-control">
+        </div>
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:10px;">
@@ -460,6 +615,106 @@ function openAddStudentModal() {
   document.getElementById('addStudentModal').style.display = 'flex';
   document.getElementById('addStreamAcademic').checked = true;
   filterStreamOptions('add');
+  recalcStudentFee();
+}
+
+function toggleStudentFeeSection() {
+  const isChecked = document.getElementById('addStudentSetupFees').checked;
+  document.getElementById('studentFeeSectionWrapper').style.display = isChecked ? 'block' : 'none';
+  if (!isChecked) {
+    document.getElementById('addFeeAmount').value = '';
+    document.getElementById('addFeePaidAmount').value = '0';
+  }
+  recalcStudentFee();
+}
+
+function toggleFeePlanType(type) {
+  const box = document.getElementById('installmentConfigBox');
+  if (type === 'installment') {
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+  recalcStudentFee();
+}
+
+function toggleInstallmentMode() {
+  const mode = document.getElementById('addInstallmentMode')?.value || 'fixed';
+  const fixedRow = document.getElementById('fixedCountRow');
+  const unlimitedRow = document.getElementById('unlimitedInfoRow');
+
+  if (mode === 'unlimited') {
+    if (fixedRow) fixedRow.style.display = 'none';
+    if (unlimitedRow) unlimitedRow.style.display = 'block';
+  } else {
+    if (fixedRow) fixedRow.style.display = 'block';
+    if (unlimitedRow) unlimitedRow.style.display = 'none';
+  }
+  recalcStudentFee();
+}
+
+function setQuickCount(val) {
+  if (val) {
+    document.getElementById('addTotalInstallments').value = val;
+    recalcStudentFee();
+  }
+}
+
+function recalcStudentFee() {
+  const feeSection = document.getElementById('addStudentSetupFees');
+  if (!feeSection) return;
+  const isChecked = feeSection.checked;
+  const summaryBox = document.getElementById('feeCalculationSummary');
+  const previewBox = document.getElementById('installmentPlanPreview');
+
+  if (!isChecked) {
+    if (summaryBox) summaryBox.style.display = 'none';
+    return;
+  }
+
+  const total = parseFloat(document.getElementById('addFeeAmount').value) || 0;
+  const discount = parseFloat(document.getElementById('addFeeDiscount').value) || 0;
+  const paid = parseFloat(document.getElementById('addFeePaidAmount').value) || 0;
+  const payable = Math.max(0, total - discount);
+  const due = Math.max(0, payable - paid);
+
+  const feeType = document.querySelector('input[name="fee_type"]:checked')?.value || 'onetime';
+
+  if (total <= 0) {
+    if (summaryBox) summaryBox.style.display = 'none';
+    if (previewBox) previewBox.innerHTML = 'Enter total fee to preview installment breakdown.';
+    return;
+  }
+
+  if (summaryBox) summaryBox.style.display = 'block';
+
+  if (feeType === 'installment') {
+    const mode = document.getElementById('addInstallmentMode')?.value || 'fixed';
+    if (mode === 'unlimited') {
+      if (previewBox) {
+        previewBox.innerHTML = `<strong>Schedule:</strong> <i class="bi bi-infinity"></i> <strong>Unlimited / Ongoing Plan:</strong> Installment/Monthly Amount: ৳${payable.toLocaleString()} | Paid Now: ৳${paid.toLocaleString()}.`;
+      }
+      if (summaryBox) {
+        summaryBox.innerHTML = `<div><strong>Ongoing Plan:</strong> Installment Amount: ৳${payable.toLocaleString()} | Discount: ৳${discount.toLocaleString()}</div>
+          <div style="margin-top:4px;">Paid Now: ৳${paid.toLocaleString()} | Due for 1st Installment: ৳${due.toLocaleString()} (Ongoing monthly installments)</div>`;
+      }
+    } else {
+      const installments = parseInt(document.getElementById('addTotalInstallments').value) || 3;
+      const perInst = (payable / installments).toFixed(2);
+      if (previewBox) {
+        previewBox.innerHTML = `<strong>Schedule:</strong> Payable ৳${payable.toLocaleString()} divided into <strong>${installments} installments</strong> of approx <strong>৳${perInst} each</strong>.`;
+      }
+      if (summaryBox) {
+        summaryBox.innerHTML = `<div><strong>Installment Plan:</strong> Total: ৳${total.toLocaleString()} | Discount: ৳${discount.toLocaleString()} | Net Payable: ৳${payable.toLocaleString()}</div>
+          <div style="margin-top:4px;">Paid Now: ৳${paid.toLocaleString()} | Total Remaining Due: ৳${due.toLocaleString()} (in ${installments} installments)</div>`;
+      }
+    }
+  } else {
+    if (summaryBox) {
+      summaryBox.innerHTML = `<div><strong>One-time Payment:</strong> Total: ৳${total.toLocaleString()} | Discount: ৳${discount.toLocaleString()} | Net Payable: ৳${payable.toLocaleString()}</div>
+        <div style="margin-top:4px;">Paid Now: ৳${paid.toLocaleString()} | Due: ৳${due.toLocaleString()} (${due === 0 ? 'Full Paid' : (paid > 0 ? 'Partial Paid' : 'Unpaid')})</div>`;
+    }
+  }
 }
 
 function filterStreamOptions(prefix) {
@@ -518,6 +773,9 @@ function openEditStudentModal(st) {
   document.getElementById('editStudentName').value = st.name || '';
   document.getElementById('editStudentPhone').value = st.phone || '';
   document.getElementById('editStudentEmail').value = st.email || '';
+  if (document.getElementById('editStudentPassword')) {
+    document.getElementById('editStudentPassword').value = '';
+  }
   document.getElementById('editStudentGuardian').value = st.guardian_name || '';
   document.getElementById('editStudentGuardianPhone').value = st.guardian_phone || '';
   document.getElementById('editStudentStatus').value = st.status || 'Active';
