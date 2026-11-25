@@ -1195,6 +1195,7 @@ class RoutesTest extends TestCase
         $feesPage = $this->actingAs($this->adminUser)->get(route('admin.fees'));
         $feesPage->assertStatus(200);
         $feesPage->assertSee('Inst. 1 (Unlimited)');
+        $feesPage->assertSee('feeStudentSearchInput');
 
         // 6. Student Creation with CUSTOM HIGH installment count (e.g. 15 installments)
         User::where('email', 'custom.inst@edumanage.com')->delete();
