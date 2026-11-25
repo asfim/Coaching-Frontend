@@ -8,87 +8,183 @@
 
 @section('styles')
 <style>
-/* Modern Accounts Stat Cards */
+/* Modern Accounts Stat Cards - Full Card Rich Design */
 .accounts-stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 18px;
+  gap: 20px;
   margin-bottom: 26px;
 }
 .fin-card {
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  padding: 22px 24px;
+  border-radius: 18px;
+  padding: 24px 26px;
   position: relative;
   overflow: hidden;
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border: 1px solid transparent;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 .fin-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+  transform: translateY(-5px);
 }
-.fin-card::before {
-  content: '';
+
+/* Full Card Themes */
+.fin-card.income {
+  background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
+  border-color: #bbf7d0;
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.09), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+.fin-card.income:hover {
+  border-color: #4ade80;
+  box-shadow: 0 12px 28px -4px rgba(16, 185, 129, 0.20);
+}
+
+.fin-card.expense {
+  background: linear-gradient(145deg, #ffffff 0%, #fef2f2 100%);
+  border-color: #fecaca;
+  box-shadow: 0 4px 20px -2px rgba(239, 68, 68, 0.09), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+.fin-card.expense:hover {
+  border-color: #f87171;
+  box-shadow: 0 12px 28px -4px rgba(239, 68, 68, 0.20);
+}
+
+.fin-card.balance {
+  background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.09), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+.fin-card.balance:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.20);
+}
+
+.fin-card.monthly-inc {
+  background: linear-gradient(145deg, #ffffff 0%, #f5f3ff 100%);
+  border-color: #ddd6fe;
+  box-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.09), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+.fin-card.monthly-inc:hover {
+  border-color: #a78bfa;
+  box-shadow: 0 12px 28px -4px rgba(124, 58, 237, 0.20);
+}
+
+.fin-card.monthly-exp {
+  background: linear-gradient(145deg, #ffffff 0%, #fffbeb 100%);
+  border-color: #fde68a;
+  box-shadow: 0 4px 20px -2px rgba(217, 119, 6, 0.09), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+.fin-card.monthly-exp:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 12px 28px -4px rgba(217, 119, 6, 0.20);
+}
+
+.fin-card.monthly-net {
+  background: linear-gradient(145deg, #ffffff 0%, #f0fdfa 100%);
+  border-color: #99f6e4;
+  box-shadow: 0 4px 20px -2px rgba(13, 148, 136, 0.09), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+.fin-card.monthly-net:hover {
+  border-color: #2dd4bf;
+  box-shadow: 0 12px 28px -4px rgba(13, 148, 136, 0.20);
+}
+
+/* Background Watermark Icon */
+.fin-bg-icon {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
+  right: -6px;
+  bottom: -10px;
+  font-size: 5.2rem;
+  opacity: 0.06;
+  pointer-events: none;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  line-height: 1;
 }
-.fin-card.income::before { background: linear-gradient(90deg, #059669, #34d399); }
-.fin-card.expense::before { background: linear-gradient(90deg, #dc2626, #f87171); }
-.fin-card.balance::before { background: linear-gradient(90deg, #2563eb, #60a5fa); }
-.fin-card.monthly-inc::before { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
-.fin-card.monthly-exp::before { background: linear-gradient(90deg, #d97706, #fbbf24); }
-.fin-card.monthly-net::before { background: linear-gradient(90deg, #0d9488, #2dd4bf); }
+.fin-card:hover .fin-bg-icon {
+  transform: scale(1.1) rotate(-6deg);
+  opacity: 0.12;
+}
 
 .fin-card-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
 }
 .fin-icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   flex-shrink: 0;
+  transition: transform 0.25s ease;
 }
-.fin-icon-box.green { background: #ecfdf5; color: #059669; }
-.fin-icon-box.red { background: #fef2f2; color: #dc2626; }
-.fin-icon-box.blue { background: #eff6ff; color: #2563eb; }
-.fin-icon-box.purple { background: #f5f3ff; color: #7c3aed; }
-.fin-icon-box.amber { background: #fffbeb; color: #d97706; }
-.fin-icon-box.teal { background: #f0fdfa; color: #0d9488; }
+.fin-card:hover .fin-icon-box {
+  transform: scale(1.08);
+}
+.fin-icon-box.green {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(5, 150, 105, 0.28);
+}
+.fin-icon-box.red {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.28);
+}
+.fin-icon-box.blue {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(29, 78, 216, 0.28);
+}
+.fin-icon-box.purple {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(109, 40, 217, 0.28);
+}
+.fin-icon-box.amber {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(217, 119, 6, 0.28);
+}
+.fin-icon-box.teal {
+  background: linear-gradient(135deg, #14b8a6, #0f766e);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(15, 118, 110, 0.28);
+}
 
 .fin-pill {
-  font-size: 0.73rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 50px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-.fin-pill.green { background: #d1fae5; color: #065f46; }
-.fin-pill.red { background: #fee2e2; color: #991b1b; }
-.fin-pill.blue { background: #dbeafe; color: #1e40af; }
-.fin-pill.purple { background: #ede9fe; color: #5b21b6; }
-.fin-pill.amber { background: #fef3c7; color: #92400e; }
-.fin-pill.teal { background: #ccfbf1; color: #115e59; }
+.fin-pill.green { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+.fin-pill.red { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+.fin-pill.blue { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.fin-pill.purple { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+.fin-pill.amber { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.fin-pill.teal { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
 
+.fin-card-body {
+  position: relative;
+  z-index: 1;
+}
 .fin-card-body h3 {
-  font-size: 1.65rem;
+  font-size: 1.8rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0 0 4px;
@@ -97,18 +193,20 @@
 .fin-card-body .fin-label {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--gray-600);
+  color: #475569;
   margin: 0;
 }
 .fin-card-footer {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--gray-200);
-  font-size: 0.78rem;
-  color: var(--gray-500);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 0.80rem;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 1;
 }
 
 /* Quick Filter Pills */
@@ -193,6 +291,7 @@
 <div class="accounts-stat-grid">
   <!-- 1. Total Income -->
   <div class="fin-card income">
+    <i class="bi bi-wallet2 fin-bg-icon"></i>
     <div class="fin-card-top">
       <div class="fin-icon-box green">
         <i class="bi bi-arrow-down-left-circle-fill"></i>
@@ -207,12 +306,13 @@
     </div>
     <div class="fin-card-footer">
       <span>Student fees &amp; all receipts</span>
-      <strong style="color:#059669;"><i class="bi bi-check-circle"></i> {{ $incomeCount }} entries</strong>
+      <strong style="color:#059669;"><i class="bi bi-check-circle-fill"></i> {{ $incomeCount }} entries</strong>
     </div>
   </div>
 
   <!-- 2. Total Expense -->
   <div class="fin-card expense">
+    <i class="bi bi-cash-stack fin-bg-icon"></i>
     <div class="fin-card-top">
       <div class="fin-icon-box red">
         <i class="bi bi-arrow-up-right-circle-fill"></i>
@@ -227,12 +327,13 @@
     </div>
     <div class="fin-card-footer">
       <span>Salaries, rent &amp; utilities</span>
-      <strong style="color:#dc2626;"><i class="bi bi-dash-circle"></i> {{ $expenseCount }} entries</strong>
+      <strong style="color:#dc2626;"><i class="bi bi-dash-circle-fill"></i> {{ $expenseCount }} entries</strong>
     </div>
   </div>
 
   <!-- 3. Net Cash Reserve / Balance -->
   <div class="fin-card balance">
+    <i class="bi bi-safe2 fin-bg-icon"></i>
     <div class="fin-card-top">
       <div class="fin-icon-box blue">
         <i class="bi bi-safe2-fill"></i>
@@ -257,6 +358,7 @@
 
   <!-- 4. This Month Income -->
   <div class="fin-card monthly-inc">
+    <i class="bi bi-calendar-check fin-bg-icon"></i>
     <div class="fin-card-top">
       <div class="fin-icon-box purple">
         <i class="bi bi-calendar-check-fill"></i>
@@ -271,12 +373,13 @@
     </div>
     <div class="fin-card-footer">
       <span>Collected this month</span>
-      <span style="color:#7c3aed;font-weight:600;">{{ now()->format('F') }}</span>
+      <span style="color:#7c3aed;font-weight:700;"><i class="bi bi-calendar2-week"></i> {{ now()->format('F') }}</span>
     </div>
   </div>
 
   <!-- 5. This Month Expense -->
   <div class="fin-card monthly-exp">
+    <i class="bi bi-receipt-cutoff fin-bg-icon"></i>
     <div class="fin-card-top">
       <div class="fin-icon-box amber">
         <i class="bi bi-receipt-cutoff"></i>
@@ -291,18 +394,19 @@
     </div>
     <div class="fin-card-footer">
       <span>Paid out this month</span>
-      <span style="color:#d97706;font-weight:600;">{{ now()->format('F') }}</span>
+      <span style="color:#d97706;font-weight:700;"><i class="bi bi-calendar2-week"></i> {{ now()->format('F') }}</span>
     </div>
   </div>
 
   <!-- 6. Monthly Net Profit / Margin -->
   <div class="fin-card monthly-net">
+    <i class="bi bi-pie-chart fin-bg-icon"></i>
     <div class="fin-card-top">
       <div class="fin-icon-box teal">
         <i class="bi bi-pie-chart-fill"></i>
       </div>
       <span class="fin-pill {{ $monthlyNet >= 0 ? 'teal' : 'red' }}">
-        <i class="bi bi-speedometer"></i> {{ $monthlyNet >= 0 ? 'Margin Profit' : 'Margin Loss' }}
+        <i class="bi bi-speedometer2"></i> {{ $monthlyNet >= 0 ? 'Margin Profit' : 'Margin Loss' }}
       </span>
     </div>
     <div class="fin-card-body">
