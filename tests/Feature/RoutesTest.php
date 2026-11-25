@@ -1242,4 +1242,50 @@ class RoutesTest extends TestCase
         $customStudent->delete();
         $testClass->delete();
     }
+
+    public function test_admin_reports_filtering_and_generation(): void
+    {
+        // 1. Default report (Fees)
+        $respFees = $this->actingAs($this->adminUser)->get(route('admin.reports'));
+        $respFees->assertStatus(200);
+        $respFees->assertSee('Reports &amp; Analytics', false);
+        $respFees->assertSee('Fee Collection');
+        $respFees->assertSee('Total Collected:');
+        $respFees->assertSee('exportReportToCSV');
+        $respFees->assertSee('reportChartCanvas');
+
+        // 2. Due Fees Report
+        $respDue = $this->actingAs($this->adminUser)->get(route('admin.reports', ['report_type' => 'due']));
+        $respDue->assertStatus(200);
+        $respDue->assertSee('Due Report');
+        $respDue->assertSee('Outstanding Due:');
+
+        // 3. Students Enrollment Report
+        $respStudents = $this->actingAs($this->adminUser)->get(route('admin.reports', [
+            'report_type' => 'students',
+            'program_type' => 'Academic',
+        ]));
+        $respStudents->assertStatus(200);
+        $respStudents->assertSee('Student Report');
+        $respStudents->assertSee('Academic Program:');
+
+        // 4. Exam Results Report
+        $respResults = $this->actingAs($this->adminUser)->get(route('admin.reports', ['report_type' => 'results']));
+        $respResults->assertStatus(200);
+        $respResults->assertSee('Exam Results');
+        $respResults->assertSee('Batch Average GPA:');
+
+        // 5. Attendance Report
+        $respAttendance = $this->actingAs($this->adminUser)->get(route('admin.reports', ['report_type' => 'attendance']));
+        $respAttendance->assertStatus(200);
+        $respAttendance->assertSee('Attendance');
+        $respAttendance->assertSee('Attendance Rate:');
+
+        // 6. Financial Accounts Report
+        $respAccounts = $this->actingAs($this->adminUser)->get(route('admin.reports', ['report_type' => 'accounts']));
+        $respAccounts->assertStatus(200);
+        $respAccounts->assertSee('Finance &amp; PnL', false);
+        $respAccounts->assertSee('Total Income:');
+        $respAccounts->assertSee('Net Balance:');
+    }
 }
