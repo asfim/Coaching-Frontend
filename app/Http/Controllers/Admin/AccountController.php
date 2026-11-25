@@ -43,9 +43,15 @@ class AccountController extends Controller
             ->whereYear('date', now()->year)
             ->sum('amount');
 
+        $monthlyNet = $monthlyIncome - $monthlyExpense;
+        $totalCount = Account::count();
+        $incomeCount = Account::where('type', 'income')->count();
+        $expenseCount = Account::where('type', 'expense')->count();
+
         return view('admin.accounts.index', compact(
             'accounts', 'totalIncome', 'totalExpense', 'netBalance',
-            'monthlyIncome', 'monthlyExpense'
+            'monthlyIncome', 'monthlyExpense', 'monthlyNet',
+            'totalCount', 'incomeCount', 'expenseCount'
         ));
     }
 
