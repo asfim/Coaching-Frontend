@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SmsLog;
 use App\Models\Batch;
 use App\Models\Student;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class SmsController extends Controller
@@ -21,6 +22,10 @@ class SmsController extends Controller
 
     public function send(Request $request)
     {
+        if (Setting::get('sms_notification_status', 'off') === 'off') {
+            return redirect()->route('admin.sms')->with('error', 'SMS and Notification service is currently turned OFF (সার্ভিস বন্ধ রয়েছে). Enable it in Settings to send messages.');
+        }
+
         $validated = $request->validate([
             'recipient_type' => 'required|string',
             'message' => 'required|string|max:480',

@@ -80,7 +80,7 @@ body{overflow-x:hidden;}
     @if(auth()->user()?->hasPermission('notices'))
       <a href="{{ route('admin.notices') }}" class="nav-item {{ request()->routeIs('admin.notices*') ? 'active' : '' }}"><i class="bi bi-megaphone"></i> Notices</a>
     @endif
-    @if(auth()->user()?->hasPermission('sms'))
+    @if(($siteSettings['sms_notification_status'] ?? 'off') === 'on' && auth()->user()?->hasPermission('sms'))
       <a href="{{ route('admin.sms') }}" class="nav-item {{ request()->routeIs('admin.sms*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i> SMS / Notify</a>
     @endif
     @if(auth()->user()?->hasPermission('reports'))
@@ -110,7 +110,9 @@ body{overflow-x:hidden;}
       <div class="topbar-search"><i class="bi bi-search"></i><input type="text" placeholder="Search..."></div>
     </div>
     <div class="topbar-right">
-      <div class="icon-btn"><i class="bi bi-bell"></i><span class="notif-dot"></span></div>
+      @if(($siteSettings['sms_notification_status'] ?? 'off') === 'on')
+        <div class="icon-btn"><i class="bi bi-bell"></i><span class="notif-dot"></span></div>
+      @endif
       <div class="icon-btn"><i class="bi bi-envelope"></i></div>
       <div class="topbar-user">
         <img src="{{ !empty(auth()->user()?->avatar) ? asset(auth()->user()->avatar) : asset('images/teacher_male_2_1790497121228.jpg') }}" alt="User">

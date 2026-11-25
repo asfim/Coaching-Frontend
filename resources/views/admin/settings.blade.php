@@ -196,6 +196,27 @@
       </div>
     </div>
 
+    <h5 style="margin-bottom:16px;font-weight:700;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:8px;">
+      <i class="bi bi-chat-dots"></i> SMS &amp; Notifications Service (এসএমএস ও নোটিফিকেশন)
+    </h5>
+
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <strong style="font-size:0.9rem;color:var(--gray-900);display:block;margin-bottom:2px;">
+            SMS &amp; Notification Feature Status
+          </strong>
+          <span style="font-size:0.78rem;color:var(--gray-600);">
+            Turn off SMS broadcasting, parent alerts, and header notification bells across the system.
+          </span>
+        </div>
+        <select name="sms_notification_status" class="form-select" style="width:200px;font-weight:600;">
+          <option value="off" {{ ($settings['sms_notification_status'] ?? 'off') == 'off' ? 'selected' : '' }}>🔴 Disabled (Off / বন্ধ)</option>
+          <option value="on" {{ ($settings['sms_notification_status'] ?? 'off') == 'on' ? 'selected' : '' }}>🟢 Enabled (On / চালু)</option>
+        </select>
+      </div>
+    </div>
+
     <div style="display:flex;justify-content:flex-end;">
       <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save"></i> Save All Settings</button>
     </div>

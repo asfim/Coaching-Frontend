@@ -27,7 +27,7 @@ class AccountController extends Controller
             });
         }
 
-        $accounts = $query->paginate(15);
+        $accounts = $query->paginate(15)->withQueryString();
 
         $totalIncome = Account::where('type', 'income')->sum('amount');
         $totalExpense = Account::where('type', 'expense')->sum('amount');

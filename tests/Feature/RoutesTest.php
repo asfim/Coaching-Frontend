@@ -236,6 +236,24 @@ class RoutesTest extends TestCase
         $this->assertNull(Account::find($account->id));
     }
 
+    public function test_accounts_pagination_and_query_string(): void
+    {
+        // 1. Visit page 1
+        $resp1 = $this->actingAs($this->adminUser)->get(route('admin.accounts.index', ['page' => 1]));
+        $resp1->assertStatus(200);
+        $resp1->assertSee('Transaction Vouchers &amp; Records', false);
+        $resp1->assertSee('Showing');
+
+        // 2. Visit page 2
+        $resp2 = $this->actingAs($this->adminUser)->get(route('admin.accounts.index', ['page' => 2]));
+        $resp2->assertStatus(200);
+
+        // 3. Filter with query string and pagination
+        $respFiltered = $this->actingAs($this->adminUser)->get(route('admin.accounts.index', ['type' => 'income', 'page' => 1]));
+        $respFiltered->assertStatus(200);
+        $respFiltered->assertSee('Income');
+    }
+
     public function test_courses_crud(): void
     {
         $response = $this->actingAs($this->adminUser)->post(route('admin.courses.store'), [
@@ -1654,5 +1672,38 @@ class RoutesTest extends TestCase
         // Clean up
         $staffUser->delete();
         $teacherMock->delete();
+    }
+
+    public function test_sms_and_notification_service_can_be_turned_off_and_blocks_dispatch(): void
+    {
+        // 1. Ensure SMS is OFF
+        \App\Models\Setting::set('sms_notification_status', 'off');
+
+        // 2. Admin dashboard doesn't render SMS / Notify in sidebar when OFF
+        $dashResp = $this->actingAs($this->adminUser)->get(route('admin.dashboard'));
+        $dashResp->assertStatus(200);
+        $dashResp->assertDontSee('SMS / Notify');
+
+        // 3. Visiting /admin/sms displays service OFF notice
+        $smsPageResp = $this->actingAs($this->adminUser)->get(route('admin.sms'));
+        $smsPageResp->assertStatus(200);
+        $smsPageResp->assertSee('SMS and Notification Service is currently OFF');
+
+        // 4. Attempting to send SMS while service is OFF is blocked
+        $sendResp = $this->actingAs($this->adminUser)->post(route('admin.sms.send'), [
+            'recipient_type' => 'custom',
+            'phone' => '01700112233',
+            'message' => 'Test message while off',
+        ]);
+        $sendResp->assertRedirect(route('admin.sms'));
+        $sendResp->assertSessionHas('error');
+
+        // 5. Turn ON in settings and verify sidebar shows it
+        \App\Models\Setting::set('sms_notification_status', 'on');
+        $dashOnResp = $this->actingAs($this->adminUser)->get(route('admin.dashboard'));
+        $dashOnResp->assertSee('SMS / Notify');
+
+        // Reset to OFF as requested by user
+        \App\Models\Setting::set('sms_notification_status', 'off');
     }
 }

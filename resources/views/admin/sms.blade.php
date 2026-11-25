@@ -14,6 +14,16 @@
   </div>
 </div>
 
+@if(($siteSettings['sms_notification_status'] ?? 'off') === 'off')
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;color:#92400e;">
+    <i class="bi bi-bell-slash-fill" style="font-size:1.4rem;color:#d97706;"></i>
+    <div>
+      <strong style="display:block;font-size:0.9rem;">SMS and Notification Service is currently OFF (সার্ভিস বন্ধ রয়েছে)</strong>
+      <span style="font-size:0.8rem;color:#b45309;">SMS and Notification broadcasting is turned off. You can re-enable it anytime from <a href="{{ route('admin.settings') }}" style="color:var(--primary);font-weight:700;text-decoration:underline;">System Settings</a>.</span>
+    </div>
+  </div>
+@endif
+
 <div style="display:grid;grid-template-columns:1fr 2fr;gap:24px;margin-bottom:28px;">
   <!-- Send SMS Box -->
   <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm);">
@@ -42,9 +52,15 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
-        <i class="bi bi-send-fill"></i> Send Broadcast
-      </button>
+      @if(($siteSettings['sms_notification_status'] ?? 'off') === 'off')
+        <button type="button" class="btn btn-secondary" style="width:100%;justify-content:center;cursor:not-allowed;background:#94a3b8;border-color:#94a3b8;" disabled>
+          <i class="bi bi-bell-slash"></i> SMS Service is Currently OFF (সার্ভিস বন্ধ রয়েছে)
+        </button>
+      @else
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+          <i class="bi bi-send-fill"></i> Send Broadcast
+        </button>
+      @endif
     </form>
   </div>
 

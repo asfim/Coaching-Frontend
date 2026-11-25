@@ -512,11 +512,20 @@
     </table>
   </div>
 
-  @if($accounts->hasPages())
-    <div style="padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+  <div style="padding:16px 22px;border-top:1px solid var(--border);background:#fff;border-bottom-left-radius:var(--radius-lg);border-bottom-right-radius:var(--radius-lg);">
+    @if($accounts->hasPages())
       {{ $accounts->links() }}
-    </div>
-  @endif
+    @else
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;flex-wrap:wrap;gap:12px;">
+        <div style="font-size:0.84rem;color:var(--gray-600);">
+          Showing <strong style="color:var(--gray-900);font-weight:700;">{{ $accounts->count() }}</strong> of <strong style="color:var(--gray-900);font-weight:700;">{{ $accounts->total() }}</strong> records
+        </div>
+        <div style="font-size:0.75rem;color:var(--gray-500);background:#f1f5f9;padding:4px 10px;border-radius:12px;font-weight:600;">
+          Page 1 of 1
+        </div>
+      </div>
+    @endif
+  </div>
 </div>
 
 <!-- Add Transaction Modal -->
