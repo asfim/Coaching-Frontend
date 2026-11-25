@@ -8,12 +8,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Permission;
 
 class TeacherController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Teacher::with('user')->latest();
+        $query = Teacher::with(['user.permissions', 'user.roles'])->latest();
 
         if ($request->filled('subject')) {
             $query->where('subject', 'like', "%{$request->subject}%");
@@ -60,13 +61,16 @@ class TeacherController extends Controller
         }
 
         $permissions = $request->input('permissions', []);
-        $validated['permissions'] = $permissions;
+        if (!is_array($permissions)) {
+            $permissions = [];
+        }
+        unset($validated['permissions']);
 
         $teacher = Teacher::create($validated);
 
         // Create login User for the Teacher
         $password = $request->filled('password') ? $request->password : 'teacher123';
-        User::create([
+        $user = User::create([
             'name' => $teacher->name,
             'email' => $teacher->email,
             'password' => Hash::make($password),
@@ -74,9 +78,14 @@ class TeacherController extends Controller
             'phone' => $teacher->phone,
             'avatar' => $teacher->image,
             'teacher_id' => $teacher->id,
-            'permissions' => $permissions,
             'status' => $teacher->status,
         ]);
+        $user->assignRole('teacher');
+
+        foreach ($permissions as $permName) {
+            Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
+        }
+        $user->syncPermissions($permissions);
 
         return redirect()->route('admin.teachers')->with('success', 'Teacher profile and login credentials created successfully!');
     }
@@ -106,9 +115,17 @@ class TeacherController extends Controller
         }
 
         $permissions = $request->input('permissions', []);
-        $validated['permissions'] = $permissions;
+        if (!is_array($permissions)) {
+            $permissions = [];
+        }
+        unset($validated['permissions']);
 
         $teacher->update($validated);
+
+        // Ensure permissions exist in Spatie
+        foreach ($permissions as $permName) {
+            Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
+        }
 
         // Sync User Account
         if ($user) {
@@ -117,7 +134,6 @@ class TeacherController extends Controller
                 'email' => $teacher->email,
                 'phone' => $teacher->phone,
                 'status' => $teacher->status,
-                'permissions' => $permissions,
             ];
             if (!empty($validated['image'])) {
                 $userData['avatar'] = $validated['image'];
@@ -126,8 +142,10 @@ class TeacherController extends Controller
                 $userData['password'] = Hash::make($request->password);
             }
             $user->update($userData);
+            $user->assignRole('teacher');
+            $user->syncPermissions($permissions);
         } else {
-            User::create([
+            $user = User::create([
                 'name' => $teacher->name,
                 'email' => $teacher->email,
                 'password' => Hash::make($request->filled('password') ? $request->password : 'teacher123'),
@@ -135,9 +153,10 @@ class TeacherController extends Controller
                 'phone' => $teacher->phone,
                 'avatar' => $teacher->image,
                 'teacher_id' => $teacher->id,
-                'permissions' => $permissions,
                 'status' => $teacher->status,
             ]);
+            $user->assignRole('teacher');
+            $user->syncPermissions($permissions);
         }
 
         return redirect()->route('admin.teachers')->with('success', 'Teacher updated successfully!');

@@ -93,7 +93,7 @@
             <i class="bi bi-envelope-at" style="color:var(--primary);"></i> {{ $t->email ?: 'No email set' }}
           </div>
           @php
-            $perms = $t->permissions ?? ($t->user?->permissions ?? []);
+            $perms = $t->permissions_list ?? ($t->permissions ?? []);
             if (is_string($perms)) $perms = json_decode($perms, true) ?: [];
           @endphp
           <div style="display:flex;flex-wrap:wrap;gap:4px;">
@@ -420,7 +420,9 @@ function openEditTeacherModal(t) {
 
   // Parse permissions
   let perms = [];
-  if (Array.isArray(t.permissions)) {
+  if (Array.isArray(t.permissions_list)) {
+    perms = t.permissions_list;
+  } else if (Array.isArray(t.permissions)) {
     perms = t.permissions;
   } else if (typeof t.permissions === 'string') {
     try { perms = JSON.parse(t.permissions); } catch(e) { perms = []; }

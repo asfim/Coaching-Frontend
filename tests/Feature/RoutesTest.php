@@ -35,8 +35,8 @@ class RoutesTest extends TestCase
         parent::setUp();
         $this->adminUser = User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
         $this->teacherUser = User::where('role', 'teacher')->first() ?? User::factory()->create(['role' => 'teacher']);
-        $this->teacherUser->permissions = ['attendance', 'routine', 'results', 'exams', 'notices', 'students'];
-        $this->teacherUser->save();
+        $this->teacherUser->assignRole('teacher');
+        $this->teacherUser->syncPermissions(['attendance', 'routine', 'results', 'exams', 'notices', 'students']);
         $this->studentUser = User::where('role', 'student')->first() ?? User::factory()->create(['role' => 'student']);
         $this->parentUser = User::where('role', 'parent')->first() ?? User::factory()->create(['role' => 'parent']);
     }
@@ -1526,5 +1526,38 @@ class RoutesTest extends TestCase
         $delResp = $this->actingAs($this->adminUser)->delete(route('admin.routine.destroy', $slot->id));
         $delResp->assertRedirect(route('admin.routine', ['batch_id' => $batch->id]));
         $this->assertNull(Routine::find($slot->id));
+    }
+
+    public function test_admin_roles_and_permissions_page_and_updates(): void
+    {
+        // 1. Visit Role Permissions page as Admin
+        $resp = $this->actingAs($this->adminUser)->get(route('admin.roles.index'));
+        $resp->assertStatus(200);
+        $resp->assertSee('Role &amp; Permission Management', false);
+        $resp->assertSee('Take Attendance');
+        $resp->assertSee('Class Routine');
+        $resp->assertSee('Exam Results &amp; Marks', false);
+        $resp->assertSee('Teacher &amp; Faculty Permission Matrix', false);
+
+        // 2. Update a Teacher's permissions via role permission controller
+        $teacher = Teacher::first();
+        $this->assertNotNull($teacher);
+
+        $updateResp = $this->actingAs($this->adminUser)->put(route('admin.roles.update', $teacher->id), [
+            'permissions' => ['attendance', 'exams', 'notices'],
+        ]);
+        $updateResp->assertRedirect(route('admin.roles.index'));
+        $updateResp->assertSessionHas('success');
+
+        $teacher->refresh();
+        $this->assertEquals(['attendance', 'exams', 'notices'], $teacher->permissions);
+
+        $linkedUser = User::where('teacher_id', $teacher->id)->first();
+        if ($linkedUser) {
+            $this->assertTrue($linkedUser->hasPermission('attendance'));
+            $this->assertTrue($linkedUser->hasPermission('exams'));
+            $this->assertTrue($linkedUser->hasPermission('notices'));
+            $this->assertFalse($linkedUser->hasPermission('routine'));
+        }
     }
 }

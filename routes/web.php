@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\Admin\RolePermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -152,6 +153,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports');
+
+    // Role Permissions
+    Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles.index');
+    Route::put('/roles-permissions/{id}', [RolePermissionController::class, 'updateUserPermissions'])->name('roles.update');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings');

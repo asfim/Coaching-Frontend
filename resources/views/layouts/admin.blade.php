@@ -53,6 +53,7 @@ body{overflow-x:hidden;}
     <a href="{{ route('admin.notices') }}" class="nav-item {{ request()->routeIs('admin.notices*') ? 'active' : '' }}"><i class="bi bi-megaphone"></i> Notices</a>
     <a href="{{ route('admin.sms') }}" class="nav-item {{ request()->routeIs('admin.sms*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i> SMS / Notify</a>
     <a href="{{ route('admin.reports') }}" class="nav-item {{ request()->routeIs('admin.reports*') ? 'active' : '' }}"><i class="bi bi-bar-chart"></i> Reports</a>
+    <a href="{{ route('admin.roles.index') }}" class="nav-item {{ request()->routeIs('admin.roles*') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Role Permissions</a>
     <a href="{{ route('admin.settings') }}" class="nav-item {{ request()->routeIs('admin.settings*') ? 'active' : '' }}"><i class="bi bi-gear"></i> Settings</a>
     <div style="margin-top:16px;padding:0 8px;display:flex;flex-direction:column;gap:8px;">
       <a href="{{ route('home') }}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"><i class="bi bi-box-arrow-left"></i> Back to Site</a>

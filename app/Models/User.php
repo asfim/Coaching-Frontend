@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -28,7 +29,6 @@ class User extends Authenticatable
         'teacher_id',
         'student_id',
         'status',
-        'permissions',
     ];
 
     /**
@@ -51,7 +51,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'permissions' => 'array',
         ];
     }
 
@@ -91,16 +90,11 @@ class User extends Authenticatable
             return true;
         }
 
-        if ($this->isTeacher()) {
-            $perms = $this->permissions;
-            if (empty($perms) && $this->teacher) {
-                $perms = $this->teacher->permissions;
+        try {
+            if ($this->hasRole('admin') || $this->hasPermissionTo($permission) || $this->can($permission)) {
+                return true;
             }
-            if (is_string($perms)) {
-                $perms = json_decode($perms, true) ?: [];
-            }
-            return is_array($perms) && in_array($permission, $perms, true);
-        }
+        } catch (\Throwable $e) {}
 
         return false;
     }

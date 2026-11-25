@@ -44,8 +44,7 @@
 </div>
 
 @php
-  $userPerms = auth()->user()?->permissions ?? ($teacher?->permissions ?? []);
-  if (is_string($userPerms)) $userPerms = json_decode($userPerms, true) ?: [];
+  $userPerms = auth()->user() ? auth()->user()->getPermissionNames()->toArray() : ($teacher?->permissions ?? []);
   $hasElevatedPerms = is_array($userPerms) && count($userPerms) > 0;
 @endphp
 
