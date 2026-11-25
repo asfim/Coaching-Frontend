@@ -98,4 +98,38 @@ class User extends Authenticatable
 
         return false;
     }
+
+    public function canEdit(?string $module = null): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if ($this->hasPermission('can_edit')) {
+            return true;
+        }
+
+        if ($module) {
+            return $this->hasPermission("{$module}.edit") || $this->hasPermission("edit_{$module}");
+        }
+
+        return false;
+    }
+
+    public function canDelete(?string $module = null): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if ($this->hasPermission('can_delete')) {
+            return true;
+        }
+
+        if ($module) {
+            return $this->hasPermission("{$module}.delete") || $this->hasPermission("delete_{$module}");
+        }
+
+        return false;
+    }
 }

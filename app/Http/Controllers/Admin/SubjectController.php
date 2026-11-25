@@ -80,6 +80,10 @@ class SubjectController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('subjects')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit subjects.');
+        }
+
         $subject = Subject::findOrFail($id);
 
         $validated = $request->validate([
@@ -118,6 +122,10 @@ class SubjectController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('subjects')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete subjects.');
+        }
+
         $subject = Subject::findOrFail($id);
         $classId = $subject->class_id;
         Exam::where('subject_id', $subject->id)->update(['subject_id' => null]);

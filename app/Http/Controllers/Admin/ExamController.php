@@ -107,6 +107,10 @@ class ExamController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('exams')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit exams.');
+        }
+
         $exam = Exam::findOrFail($id);
 
         $validated = $request->validate([
@@ -161,6 +165,10 @@ class ExamController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('exams')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete exams.');
+        }
+
         $exam = Exam::findOrFail($id);
         $exam->delete();
 

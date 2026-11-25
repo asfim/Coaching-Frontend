@@ -169,16 +169,20 @@
             <a href="{{ route('admin.students.profile', $st->id) }}" class="btn btn-primary btn-icon btn-sm" title="View Profile">
               <i class="bi bi-eye"></i>
             </a>
-            <button class="btn btn-outline btn-icon btn-sm" onclick='openEditStudentModal(@json($st))' title="Edit">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <form action="{{ route('admin.students.destroy', $st->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this student record?');" style="display:inline;">
-              @csrf
-              @method('DELETE')
-              <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete">
-                <i class="bi bi-trash"></i>
+            @if(auth()->user()?->canEdit('students'))
+              <button class="btn btn-outline btn-icon btn-sm" onclick='openEditStudentModal(@json($st))' title="Edit">
+                <i class="bi bi-pencil"></i>
               </button>
-            </form>
+            @endif
+            @if(auth()->user()?->canDelete('students'))
+              <form action="{{ route('admin.students.destroy', $st->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this student record?');" style="display:inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            @endif
           </div>
         </td>
       </tr>

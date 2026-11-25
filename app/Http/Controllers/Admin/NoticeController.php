@@ -39,6 +39,10 @@ class NoticeController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('notices')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit notices.');
+        }
+
         $notice = Notice::findOrFail($id);
 
         $validated = $request->validate([
@@ -57,6 +61,10 @@ class NoticeController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('notices')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete notices.');
+        }
+
         $notice = Notice::findOrFail($id);
         $notice->delete();
 

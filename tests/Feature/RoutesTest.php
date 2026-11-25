@@ -1560,4 +1560,99 @@ class RoutesTest extends TestCase
             $this->assertFalse($linkedUser->hasPermission('routine'));
         }
     }
+
+    public function test_all_system_menus_have_permission_definitions_and_can_be_assigned(): void
+    {
+        $expectedMenus = [
+            'dashboard', 'students', 'teachers', 'courses', 'classes',
+            'subjects', 'batches', 'attendance', 'exams', 'results',
+            'routine', 'fees', 'invoices', 'accounts', 'notices',
+            'sms', 'reports', 'roles', 'settings',
+        ];
+
+        // 1. Verify every menu permission is registered in Spatie
+        foreach ($expectedMenus as $menu) {
+            $this->assertTrue(
+                \Spatie\Permission\Models\Permission::where('name', $menu)->exists(),
+                "Permission for menu '{$menu}' is missing in the database"
+            );
+        }
+
+        // 2. Admin roles page displays all menus overview
+        $resp = $this->actingAs($this->adminUser)->get(route('admin.roles.index'));
+        $resp->assertStatus(200);
+        $resp->assertSee('All System Menus &amp; Granular CRUD Permissions', false);
+        $resp->assertSee('19 Menus Registered');
+
+        // 3. Assign comprehensive menu permissions to a staff teacher
+        $teacher = Teacher::first();
+        $this->assertNotNull($teacher);
+
+        $selectedMenus = ['students', 'courses', 'fees', 'accounts', 'reports', 'sms'];
+        $updateResp = $this->actingAs($this->adminUser)->put(route('admin.roles.update', $teacher->id), [
+            'permissions' => $selectedMenus,
+        ]);
+        $updateResp->assertRedirect(route('admin.roles.index'));
+
+        $linkedUser = User::where('teacher_id', $teacher->id)->first();
+        $this->assertNotNull($linkedUser);
+        foreach ($selectedMenus as $perm) {
+            $this->assertTrue($linkedUser->hasPermission($perm), "User should have permission: {$perm}");
+        }
+        $this->assertFalse($linkedUser->hasPermission('settings'), "User should not have settings permission");
+    }
+
+    public function test_granular_edit_and_delete_permissions_enforcement(): void
+    {
+        // 1. Admin always has edit and delete permissions
+        $this->assertTrue($this->adminUser->canEdit('students'));
+        $this->assertTrue($this->adminUser->canDelete('students'));
+        $this->assertTrue($this->adminUser->canEdit('accounts'));
+        $this->assertTrue($this->adminUser->canDelete('accounts'));
+
+        // 2. Create staff user with VIEW only (no edit, no delete)
+        $staffUser = User::factory()->create(['role' => 'admin']); // admin guard for panel
+        $staffUser->syncPermissions(['students']); // only view students
+
+        $this->assertTrue($staffUser->hasPermission('students'));
+        // Check with mock / direct model methods
+        $teacherMock = User::factory()->create(['role' => 'teacher']);
+        $teacherMock->syncPermissions(['students.edit']);
+        $this->assertTrue($teacherMock->canEdit('students'));
+        $this->assertFalse($teacherMock->canDelete('students'));
+
+        $teacherMock->syncPermissions(['students.delete']);
+        $this->assertFalse($teacherMock->canEdit('students'));
+        $this->assertTrue($teacherMock->canDelete('students'));
+
+        // Global can_edit / can_delete permission
+        $teacherMock->syncPermissions(['can_edit']);
+        $this->assertTrue($teacherMock->canEdit('accounts'));
+        $this->assertTrue($teacherMock->canEdit('courses'));
+        $this->assertFalse($teacherMock->canDelete('accounts'));
+
+        $teacherMock->syncPermissions(['can_delete']);
+        $this->assertTrue($teacherMock->canDelete('accounts'));
+        $this->assertTrue($teacherMock->canDelete('students'));
+        $this->assertFalse($teacherMock->canEdit('students'));
+
+        // 3. Test that updating teacher permissions via UI supports edit and delete keys
+        $teacher = Teacher::first();
+        $this->assertNotNull($teacher);
+
+        $updateResp = $this->actingAs($this->adminUser)->put(route('admin.roles.update', $teacher->id), [
+            'permissions' => ['students', 'students.edit', 'students.delete', 'accounts', 'accounts.edit'],
+        ]);
+        $updateResp->assertRedirect(route('admin.roles.index'));
+
+        $teacherUser = User::where('teacher_id', $teacher->id)->first();
+        $this->assertTrue($teacherUser->canEdit('students'));
+        $this->assertTrue($teacherUser->canDelete('students'));
+        $this->assertTrue($teacherUser->canEdit('accounts'));
+        $this->assertFalse($teacherUser->canDelete('accounts'));
+
+        // Clean up
+        $staffUser->delete();
+        $teacherMock->delete();
+    }
 }

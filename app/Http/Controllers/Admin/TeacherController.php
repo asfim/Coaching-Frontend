@@ -92,6 +92,10 @@ class TeacherController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('teachers')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit teachers.');
+        }
+
         $teacher = Teacher::findOrFail($id);
         $user = User::where('teacher_id', $teacher->id)->first();
 
@@ -164,6 +168,10 @@ class TeacherController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('teachers')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete teachers.');
+        }
+
         $teacher = Teacher::findOrFail($id);
         User::where('teacher_id', $teacher->id)->delete();
         $teacher->delete();

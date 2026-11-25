@@ -61,6 +61,10 @@ class ClassController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('classes')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit classes.');
+        }
+
         $class = AcademicClass::findOrFail($id);
 
         $validated = $request->validate([
@@ -81,6 +85,10 @@ class ClassController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('classes')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete classes.');
+        }
+
         $class = AcademicClass::findOrFail($id);
         $class->delete();
 

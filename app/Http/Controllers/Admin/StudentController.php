@@ -349,6 +349,10 @@ class StudentController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('students')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit students.');
+        }
+
         $student = Student::findOrFail($id);
 
         $validated = $request->validate([
@@ -416,6 +420,10 @@ class StudentController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('students')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete students.');
+        }
+
         $student = Student::findOrFail($id);
         User::where('student_id', $student->id)->delete();
         $student->delete();

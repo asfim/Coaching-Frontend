@@ -139,6 +139,10 @@ class FeeController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('fees')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete fee records.');
+        }
+
         $fee = Fee::findOrFail($id);
         $fee->delete();
 

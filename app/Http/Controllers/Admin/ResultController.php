@@ -107,6 +107,10 @@ class ResultController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('results')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit results.');
+        }
+
         $result = Result::findOrFail($id);
 
         $request->validate([
@@ -151,6 +155,10 @@ class ResultController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('results')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete results.');
+        }
+
         $result = Result::findOrFail($id);
         $result->items()->delete();
         $result->delete();

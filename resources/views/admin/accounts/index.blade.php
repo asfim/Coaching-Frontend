@@ -476,16 +476,20 @@
           </td>
           <td style="padding:14px 18px;text-align:center;">
             <div class="action-btns" style="justify-content:center;">
-              <button class="btn btn-primary btn-icon btn-sm" onclick='openEditModal(@json($acc))' title="Edit Transaction">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <form action="{{ route('admin.accounts.destroy', $acc->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this transaction voucher?');" style="display:inline;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete Voucher">
-                  <i class="bi bi-trash"></i>
+              @if(auth()->user()?->canEdit('accounts'))
+                <button class="btn btn-primary btn-icon btn-sm" onclick='openEditModal(@json($acc))' title="Edit Transaction">
+                  <i class="bi bi-pencil"></i>
                 </button>
-              </form>
+              @endif
+              @if(auth()->user()?->canDelete('accounts'))
+                <form action="{{ route('admin.accounts.destroy', $acc->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this transaction voucher?');" style="display:inline;">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete Voucher">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              @endif
             </div>
           </td>
         </tr>

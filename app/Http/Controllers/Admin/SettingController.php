@@ -17,6 +17,10 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
+        if (!auth()->user()?->canEdit('settings')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit settings.');
+        }
+
         $request->validate([
             'site_logo' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:3072',
             'site_favicon' => 'nullable|file|mimes:ico,png,svg,jpg,jpeg,webp|max:1024',

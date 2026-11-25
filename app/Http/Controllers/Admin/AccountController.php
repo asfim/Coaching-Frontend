@@ -75,6 +75,10 @@ class AccountController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('accounts')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit transactions.');
+        }
+
         $account = Account::findOrFail($id);
 
         $validated = $request->validate([
@@ -95,6 +99,10 @@ class AccountController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('accounts')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete transactions.');
+        }
+
         $account = Account::findOrFail($id);
         $account->delete();
 

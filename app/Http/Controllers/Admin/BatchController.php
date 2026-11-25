@@ -51,6 +51,10 @@ class BatchController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('batches')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit batches.');
+        }
+
         $batch = Batch::findOrFail($id);
 
         $validated = $request->validate([
@@ -77,6 +81,10 @@ class BatchController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('batches')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete batches.');
+        }
+
         $batch = Batch::findOrFail($id);
         $batch->delete();
 

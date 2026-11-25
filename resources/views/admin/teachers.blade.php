@@ -118,16 +118,20 @@
         </td>
         <td>
           <div class="action-btns">
-            <button class="btn btn-outline btn-icon btn-sm" onclick='openEditTeacherModal(@json($t))' title="Edit">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <form action="{{ route('admin.teachers.destroy', $t->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this teacher and login account?');" style="display:inline;">
-              @csrf
-              @method('DELETE')
-              <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete">
-                <i class="bi bi-trash"></i>
+            @if(auth()->user()?->canEdit('teachers'))
+              <button class="btn btn-outline btn-icon btn-sm" onclick='openEditTeacherModal(@json($t))' title="Edit">
+                <i class="bi bi-pencil"></i>
               </button>
-            </form>
+            @endif
+            @if(auth()->user()?->canDelete('teachers'))
+              <form action="{{ route('admin.teachers.destroy', $t->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this teacher and login account?');" style="display:inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            @endif
           </div>
         </td>
       </tr>
@@ -183,37 +187,48 @@
 
       <!-- Module Access & Role Permissions Box -->
       <div style="background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-          <i class="bi bi-key-fill" style="color:#d97706;font-size:1rem;"></i>
-          <strong style="font-size:0.88rem;color:var(--gray-900);">Role Permissions (রোল পারমিশন)</strong>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <i class="bi bi-key-fill" style="color:#d97706;font-size:1rem;"></i>
+            <strong style="font-size:0.88rem;color:var(--gray-900);">Menu &amp; Role Permissions (মেনু ও পারমিশন)</strong>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn btn-outline btn-sm" style="font-size:0.7rem;padding:2px 8px;" onclick="toggleAddTeacherPerms(true)">Select All</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size:0.7rem;padding:2px 8px;" onclick="toggleAddTeacherPerms(false)">Clear</button>
+          </div>
         </div>
         <p style="font-size:0.75rem;color:var(--gray-500);margin:0 0 10px 0;">
-          Select which modules this teacher is allowed to access. Without permissions, they only see their personal profile details.
+          Select which system menus and features this instructor can access.
         </p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.82rem;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="attendance" checked>
-            <span><i class="bi bi-check2-circle" style="color:var(--success);"></i> Take Attendance</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.8rem;max-height:180px;overflow-y:auto;padding-right:4px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="dashboard" class="add-teacher-perm"> <span><i class="bi bi-speedometer2" style="color:#4f46e5;"></i> Dashboard</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="students" class="add-teacher-perm"> <span><i class="bi bi-person-vcard" style="color:#0284c7;"></i> Students</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="teachers" class="add-teacher-perm"> <span><i class="bi bi-person-badge" style="color:#059669;"></i> Teachers</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="courses" class="add-teacher-perm"> <span><i class="bi bi-journal-bookmark" style="color:#d97706;"></i> Courses</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="classes" class="add-teacher-perm"> <span><i class="bi bi-book" style="color:#7c3aed;"></i> Classes</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="subjects" class="add-teacher-perm"> <span><i class="bi bi-journals" style="color:#dc2626;"></i> Subjects</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="batches" class="add-teacher-perm"> <span><i class="bi bi-collection" style="color:#2563eb;"></i> Batches</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="attendance" class="add-teacher-perm" checked> <span><i class="bi bi-calendar2-check" style="color:#059669;"></i> Attendance</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="exams" class="add-teacher-perm"> <span><i class="bi bi-file-earmark-text" style="color:#7c3aed;"></i> Exams</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="results" class="add-teacher-perm"> <span><i class="bi bi-trophy" style="color:#d97706;"></i> Results &amp; Marks</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="routine" class="add-teacher-perm" checked> <span><i class="bi bi-clock-history" style="color:#2563eb;"></i> Routine</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="fees" class="add-teacher-perm"> <span><i class="bi bi-cash-coin" style="color:#059669;"></i> Fees</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="invoices" class="add-teacher-perm"> <span><i class="bi bi-receipt" style="color:#0284c7;"></i> Invoices</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="accounts" class="add-teacher-perm"> <span><i class="bi bi-wallet2" style="color:#16a34a;"></i> Accounts</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="notices" class="add-teacher-perm"> <span><i class="bi bi-megaphone" style="color:#0284c7;"></i> Notices</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="sms" class="add-teacher-perm"> <span><i class="bi bi-chat-dots" style="color:#ea580c;"></i> SMS</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="reports" class="add-teacher-perm"> <span><i class="bi bi-bar-chart" style="color:#4f46e5;"></i> Reports</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="roles" class="add-teacher-perm"> <span><i class="bi bi-shield-lock" style="color:#9333ea;"></i> Role Permissions</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="settings" class="add-teacher-perm"> <span><i class="bi bi-gear" style="color:#475569;"></i> Settings</span></label>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--gray-300);display:flex;gap:16px;flex-wrap:wrap;font-size:0.8rem;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" name="permissions[]" value="can_edit" class="add-teacher-perm">
+            <span><i class="bi bi-pencil" style="color:#d97706;"></i> Can Edit Data (এডিট করার অনুমতি)</span>
           </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="routine" checked>
-            <span><i class="bi bi-clock" style="color:var(--primary);"></i> Class Routine</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="results">
-            <span><i class="bi bi-trophy" style="color:#b45309;"></i> Exam Results / Marks</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="exams">
-            <span><i class="bi bi-file-earmark-text" style="color:#6366f1;"></i> View Exams</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="notices">
-            <span><i class="bi bi-megaphone" style="color:#0284c7;"></i> Post Notices</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="students">
-            <span><i class="bi bi-people" style="color:#475569;"></i> View Students</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" name="permissions[]" value="can_delete" class="add-teacher-perm">
+            <span><i class="bi bi-trash" style="color:#dc2626;"></i> Can Delete Records (ডিলিট করার অনুমতি)</span>
           </label>
         </div>
       </div>
@@ -314,37 +329,48 @@
 
       <!-- Module Access & Role Permissions Box -->
       <div style="background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-          <i class="bi bi-key-fill" style="color:#d97706;font-size:1rem;"></i>
-          <strong style="font-size:0.88rem;color:var(--gray-900);">Role Permissions (রোল পারমিশন)</strong>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <i class="bi bi-key-fill" style="color:#d97706;font-size:1rem;"></i>
+            <strong style="font-size:0.88rem;color:var(--gray-900);">Menu &amp; Role Permissions (মেনু ও পারমিশন)</strong>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn btn-outline btn-sm" style="font-size:0.7rem;padding:2px 8px;" onclick="toggleEditTeacherPerms(true)">Select All</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size:0.7rem;padding:2px 8px;" onclick="toggleEditTeacherPerms(false)">Clear</button>
+          </div>
         </div>
         <p style="font-size:0.75rem;color:var(--gray-500);margin:0 0 10px 0;">
-          Select which modules this teacher is allowed to access.
+          Select which system menus and features this instructor can access.
         </p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.82rem;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="attendance" id="edit_perm_attendance">
-            <span><i class="bi bi-check2-circle" style="color:var(--success);"></i> Take Attendance</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.8rem;max-height:180px;overflow-y:auto;padding-right:4px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="dashboard" id="edit_perm_dashboard"> <span><i class="bi bi-speedometer2" style="color:#4f46e5;"></i> Dashboard</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="students" id="edit_perm_students"> <span><i class="bi bi-person-vcard" style="color:#0284c7;"></i> Students</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="teachers" id="edit_perm_teachers"> <span><i class="bi bi-person-badge" style="color:#059669;"></i> Teachers</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="courses" id="edit_perm_courses"> <span><i class="bi bi-journal-bookmark" style="color:#d97706;"></i> Courses</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="classes" id="edit_perm_classes"> <span><i class="bi bi-book" style="color:#7c3aed;"></i> Classes</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="subjects" id="edit_perm_subjects"> <span><i class="bi bi-journals" style="color:#dc2626;"></i> Subjects</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="batches" id="edit_perm_batches"> <span><i class="bi bi-collection" style="color:#2563eb;"></i> Batches</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="attendance" id="edit_perm_attendance"> <span><i class="bi bi-calendar2-check" style="color:#059669;"></i> Attendance</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="exams" id="edit_perm_exams"> <span><i class="bi bi-file-earmark-text" style="color:#7c3aed;"></i> Exams</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="results" id="edit_perm_results"> <span><i class="bi bi-trophy" style="color:#d97706;"></i> Results &amp; Marks</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="routine" id="edit_perm_routine"> <span><i class="bi bi-clock-history" style="color:#2563eb;"></i> Routine</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="fees" id="edit_perm_fees"> <span><i class="bi bi-cash-coin" style="color:#059669;"></i> Fees</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="invoices" id="edit_perm_invoices"> <span><i class="bi bi-receipt" style="color:#0284c7;"></i> Invoices</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="accounts" id="edit_perm_accounts"> <span><i class="bi bi-wallet2" style="color:#16a34a;"></i> Accounts</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="notices" id="edit_perm_notices"> <span><i class="bi bi-megaphone" style="color:#0284c7;"></i> Notices</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="sms" id="edit_perm_sms"> <span><i class="bi bi-chat-dots" style="color:#ea580c;"></i> SMS</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="reports" id="edit_perm_reports"> <span><i class="bi bi-bar-chart" style="color:#4f46e5;"></i> Reports</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="roles" id="edit_perm_roles"> <span><i class="bi bi-shield-lock" style="color:#9333ea;"></i> Role Permissions</span></label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="permissions[]" value="settings" id="edit_perm_settings"> <span><i class="bi bi-gear" style="color:#475569;"></i> Settings</span></label>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--gray-300);display:flex;gap:16px;flex-wrap:wrap;font-size:0.8rem;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" name="permissions[]" value="can_edit" id="edit_perm_can_edit">
+            <span><i class="bi bi-pencil" style="color:#d97706;"></i> Can Edit Data (এডিট করার অনুমতি)</span>
           </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="routine" id="edit_perm_routine">
-            <span><i class="bi bi-clock" style="color:var(--primary);"></i> Class Routine</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="results" id="edit_perm_results">
-            <span><i class="bi bi-trophy" style="color:#b45309;"></i> Exam Results / Marks</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="exams" id="edit_perm_exams">
-            <span><i class="bi bi-file-earmark-text" style="color:#6366f1;"></i> View Exams</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="notices" id="edit_perm_notices">
-            <span><i class="bi bi-megaphone" style="color:#0284c7;"></i> Post Notices</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" name="permissions[]" value="students" id="edit_perm_students">
-            <span><i class="bi bi-people" style="color:#475569;"></i> View Students</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" name="permissions[]" value="can_delete" id="edit_perm_can_delete">
+            <span><i class="bi bi-trash" style="color:#dc2626;"></i> Can Delete Records (ডিলিট করার অনুমতি)</span>
           </label>
         </div>
       </div>
@@ -430,10 +456,27 @@ function openEditTeacherModal(t) {
     perms = t.user.permissions;
   }
 
-  ['attendance', 'routine', 'results', 'exams', 'notices', 'students'].forEach(function(p) {
+  const allPermKeys = ['dashboard', 'students', 'teachers', 'courses', 'classes', 'subjects', 'batches', 'attendance', 'exams', 'results', 'routine', 'fees', 'invoices', 'accounts', 'notices', 'sms', 'reports', 'roles', 'settings', 'can_edit', 'can_delete'];
+  allPermKeys.forEach(function(p) {
     const el = document.getElementById('edit_perm_' + p);
     if (el) {
       el.checked = perms.includes(p);
+    }
+  });
+}
+
+function toggleAddTeacherPerms(check) {
+  document.querySelectorAll('.add-teacher-perm').forEach(function(el) {
+    el.checked = check;
+  });
+}
+
+function toggleEditTeacherPerms(check) {
+  const allPermKeys = ['dashboard', 'students', 'teachers', 'courses', 'classes', 'subjects', 'batches', 'attendance', 'exams', 'results', 'routine', 'fees', 'invoices', 'accounts', 'notices', 'sms', 'reports', 'roles', 'settings', 'can_edit', 'can_delete'];
+  allPermKeys.forEach(function(p) {
+    const el = document.getElementById('edit_perm_' + p);
+    if (el) {
+      el.checked = check;
     }
   });
 }

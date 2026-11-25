@@ -35,26 +35,63 @@ body{overflow-x:hidden;}
     @endif
   </div>
   <nav class="sidebar-nav">
-    <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
-    <a href="{{ route('admin.students') }}" class="nav-item {{ request()->routeIs('admin.students*') ? 'active' : '' }}"><i class="bi bi-person-vcard"></i> Students</a>
-    <a href="{{ route('admin.teachers') }}" class="nav-item {{ request()->routeIs('admin.teachers*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i> Teachers</a>
-    <a href="{{ route('admin.courses') }}" class="nav-item {{ request()->routeIs('admin.courses*') ? 'active' : '' }}"><i class="bi bi-journal-bookmark"></i> Courses</a>
-    <a href="{{ route('admin.classes.index') }}" class="nav-item {{ request()->routeIs('admin.classes*') ? 'active' : '' }}"><i class="bi bi-book"></i> Classes</a>
-    <a href="{{ route('admin.subjects.index') }}" class="nav-item {{ request()->routeIs('admin.subjects*') ? 'active' : '' }}"><i class="bi bi-journals"></i> Subjects</a>
-    <a href="{{ route('admin.batches') }}" class="nav-item {{ request()->routeIs('admin.batches*') ? 'active' : '' }}"><i class="bi bi-collection"></i> Batches</a>
-    <a href="{{ route('admin.attendance') }}" class="nav-item {{ request()->routeIs('admin.attendance*') ? 'active' : '' }}"><i class="bi bi-calendar2-check"></i> Attendance</a>
-    <a href="{{ route('admin.exams') }}" class="nav-item {{ request()->routeIs('admin.exams*') ? 'active' : '' }}"><i class="bi bi-file-earmark-text"></i> Exams</a>
-    <a href="{{ route('admin.results') }}" class="nav-item {{ request()->routeIs('admin.results*') ? 'active' : '' }}"><i class="bi bi-trophy"></i> Results</a>
-    <a href="{{ route('admin.routine') }}" class="nav-item {{ request()->routeIs('admin.routine*') ? 'active' : '' }}"><i class="bi bi-clock-history"></i> Routine</a>
-    <a href="{{ route('admin.fees') }}" class="nav-item {{ request()->routeIs('admin.fees*') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> Fees</a>
-    <a href="{{ route('admin.invoice') }}" class="nav-item {{ request()->routeIs('admin.invoice*') ? 'active' : '' }}"><i class="bi bi-receipt"></i> Invoices</a>
-    <!-- Accounts Menu requested by user -->
-    <a href="{{ route('admin.accounts.index') }}" class="nav-item {{ request()->routeIs('admin.accounts*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Accounts</a>
-    <a href="{{ route('admin.notices') }}" class="nav-item {{ request()->routeIs('admin.notices*') ? 'active' : '' }}"><i class="bi bi-megaphone"></i> Notices</a>
-    <a href="{{ route('admin.sms') }}" class="nav-item {{ request()->routeIs('admin.sms*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i> SMS / Notify</a>
-    <a href="{{ route('admin.reports') }}" class="nav-item {{ request()->routeIs('admin.reports*') ? 'active' : '' }}"><i class="bi bi-bar-chart"></i> Reports</a>
-    <a href="{{ route('admin.roles.index') }}" class="nav-item {{ request()->routeIs('admin.roles*') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Role Permissions</a>
-    <a href="{{ route('admin.settings') }}" class="nav-item {{ request()->routeIs('admin.settings*') ? 'active' : '' }}"><i class="bi bi-gear"></i> Settings</a>
+    @if(auth()->user()?->hasPermission('dashboard'))
+      <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    @endif
+    @if(auth()->user()?->hasPermission('students'))
+      <a href="{{ route('admin.students') }}" class="nav-item {{ request()->routeIs('admin.students*') ? 'active' : '' }}"><i class="bi bi-person-vcard"></i> Students</a>
+    @endif
+    @if(auth()->user()?->hasPermission('teachers'))
+      <a href="{{ route('admin.teachers') }}" class="nav-item {{ request()->routeIs('admin.teachers*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i> Teachers</a>
+    @endif
+    @if(auth()->user()?->hasPermission('courses'))
+      <a href="{{ route('admin.courses') }}" class="nav-item {{ request()->routeIs('admin.courses*') ? 'active' : '' }}"><i class="bi bi-journal-bookmark"></i> Courses</a>
+    @endif
+    @if(auth()->user()?->hasPermission('classes'))
+      <a href="{{ route('admin.classes.index') }}" class="nav-item {{ request()->routeIs('admin.classes*') ? 'active' : '' }}"><i class="bi bi-book"></i> Classes</a>
+    @endif
+    @if(auth()->user()?->hasPermission('subjects'))
+      <a href="{{ route('admin.subjects.index') }}" class="nav-item {{ request()->routeIs('admin.subjects*') ? 'active' : '' }}"><i class="bi bi-journals"></i> Subjects</a>
+    @endif
+    @if(auth()->user()?->hasPermission('batches'))
+      <a href="{{ route('admin.batches') }}" class="nav-item {{ request()->routeIs('admin.batches*') ? 'active' : '' }}"><i class="bi bi-collection"></i> Batches</a>
+    @endif
+    @if(auth()->user()?->hasPermission('attendance'))
+      <a href="{{ route('admin.attendance') }}" class="nav-item {{ request()->routeIs('admin.attendance*') ? 'active' : '' }}"><i class="bi bi-calendar2-check"></i> Attendance</a>
+    @endif
+    @if(auth()->user()?->hasPermission('exams'))
+      <a href="{{ route('admin.exams') }}" class="nav-item {{ request()->routeIs('admin.exams*') ? 'active' : '' }}"><i class="bi bi-file-earmark-text"></i> Exams</a>
+    @endif
+    @if(auth()->user()?->hasPermission('results'))
+      <a href="{{ route('admin.results') }}" class="nav-item {{ request()->routeIs('admin.results*') ? 'active' : '' }}"><i class="bi bi-trophy"></i> Results</a>
+    @endif
+    @if(auth()->user()?->hasPermission('routine'))
+      <a href="{{ route('admin.routine') }}" class="nav-item {{ request()->routeIs('admin.routine*') ? 'active' : '' }}"><i class="bi bi-clock-history"></i> Routine</a>
+    @endif
+    @if(auth()->user()?->hasPermission('fees'))
+      <a href="{{ route('admin.fees') }}" class="nav-item {{ request()->routeIs('admin.fees*') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> Fees</a>
+    @endif
+    @if(auth()->user()?->hasPermission('invoices'))
+      <a href="{{ route('admin.invoice') }}" class="nav-item {{ request()->routeIs('admin.invoice*') ? 'active' : '' }}"><i class="bi bi-receipt"></i> Invoices</a>
+    @endif
+    @if(auth()->user()?->hasPermission('accounts'))
+      <a href="{{ route('admin.accounts.index') }}" class="nav-item {{ request()->routeIs('admin.accounts*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Accounts</a>
+    @endif
+    @if(auth()->user()?->hasPermission('notices'))
+      <a href="{{ route('admin.notices') }}" class="nav-item {{ request()->routeIs('admin.notices*') ? 'active' : '' }}"><i class="bi bi-megaphone"></i> Notices</a>
+    @endif
+    @if(auth()->user()?->hasPermission('sms'))
+      <a href="{{ route('admin.sms') }}" class="nav-item {{ request()->routeIs('admin.sms*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i> SMS / Notify</a>
+    @endif
+    @if(auth()->user()?->hasPermission('reports'))
+      <a href="{{ route('admin.reports') }}" class="nav-item {{ request()->routeIs('admin.reports*') ? 'active' : '' }}"><i class="bi bi-bar-chart"></i> Reports</a>
+    @endif
+    @if(auth()->user()?->hasPermission('roles'))
+      <a href="{{ route('admin.roles.index') }}" class="nav-item {{ request()->routeIs('admin.roles*') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Role Permissions</a>
+    @endif
+    @if(auth()->user()?->hasPermission('settings'))
+      <a href="{{ route('admin.settings') }}" class="nav-item {{ request()->routeIs('admin.settings*') ? 'active' : '' }}"><i class="bi bi-gear"></i> Settings</a>
+    @endif
     <div style="margin-top:16px;padding:0 8px;display:flex;flex-direction:column;gap:8px;">
       <a href="{{ route('home') }}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"><i class="bi bi-box-arrow-left"></i> Back to Site</a>
       <form action="{{ route('logout') }}" method="POST" style="margin:0;">

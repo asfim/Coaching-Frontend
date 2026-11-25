@@ -54,6 +54,10 @@ class RoutineController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('routine')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit routine slots.');
+        }
+
         $routine = Routine::findOrFail($id);
 
         $validated = $request->validate([
@@ -74,6 +78,10 @@ class RoutineController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('routine')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete routine slots.');
+        }
+
         $routine = Routine::findOrFail($id);
         $batchId = $routine->batch_id;
         $routine->delete();

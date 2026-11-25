@@ -61,6 +61,10 @@ class CourseController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!auth()->user()?->canEdit('courses')) {
+            return redirect()->back()->with('error', 'You do not have permission to edit courses.');
+        }
+
         $course = Course::findOrFail($id);
 
         $validated = $request->validate([
@@ -95,6 +99,10 @@ class CourseController extends Controller
 
     public function destroy($id)
     {
+        if (!auth()->user()?->canDelete('courses')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete courses.');
+        }
+
         $course = Course::findOrFail($id);
         $course->delete();
 

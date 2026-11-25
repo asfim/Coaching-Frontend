@@ -15,25 +15,74 @@ class RolePermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 1. Define Available Permissions
-        $permissions = [
-            'attendance',
-            'routine',
-            'results',
-            'exams',
-            'notices',
+        // 1. Base menu permissions
+        $menuPermissions = [
+            'dashboard',
             'students',
+            'teachers',
+            'courses',
+            'classes',
+            'subjects',
+            'batches',
+            'attendance',
+            'exams',
+            'results',
+            'routine',
             'fees',
+            'invoices',
             'accounts',
+            'notices',
+            'sms',
             'reports',
+            'roles',
             'settings',
         ];
 
-        foreach ($permissions as $perm) {
+        // 2. Granular Edit & Delete permissions
+        $actionPermissions = [
+            'can_edit',
+            'can_delete',
+
+            // Edit permissions per module
+            'students.edit',
+            'teachers.edit',
+            'courses.edit',
+            'classes.edit',
+            'subjects.edit',
+            'batches.edit',
+            'attendance.edit',
+            'exams.edit',
+            'results.edit',
+            'routine.edit',
+            'fees.edit',
+            'accounts.edit',
+            'notices.edit',
+            'settings.edit',
+            'roles.edit',
+
+            // Delete permissions per module
+            'students.delete',
+            'teachers.delete',
+            'courses.delete',
+            'classes.delete',
+            'subjects.delete',
+            'batches.delete',
+            'exams.delete',
+            'results.delete',
+            'routine.delete',
+            'fees.delete',
+            'accounts.delete',
+            'notices.delete',
+            'sms.delete',
+        ];
+
+        $allPermissions = array_merge($menuPermissions, $actionPermissions);
+
+        foreach ($allPermissions as $perm) {
             Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }
 
-        // 2. Define Roles and Assign Default Permissions
+        // 3. Define Roles and Assign Default Permissions
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $adminRole->syncPermissions(Permission::all());
 
@@ -43,7 +92,7 @@ class RolePermissionSeeder extends Seeder
         $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
         $parentRole = Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
 
-        // 3. Sync Roles & Permissions with Existing Users
+        // 4. Sync Roles & Permissions with Existing Users
         $users = User::all();
         foreach ($users as $user) {
             if ($user->role) {
@@ -51,11 +100,6 @@ class RolePermissionSeeder extends Seeder
             }
             if ($user->role === 'admin') {
                 $user->syncPermissions(Permission::all());
-            } elseif ($user->role === 'teacher') {
-                // If the user has no direct permissions yet, give default teacher permissions
-                if ($user->permissions()->count() === 0) {
-                    $user->syncPermissions(['attendance', 'routine']);
-                }
             }
         }
     }
