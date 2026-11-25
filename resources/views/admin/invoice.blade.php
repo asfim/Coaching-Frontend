@@ -12,10 +12,14 @@
   <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:2px solid var(--gray-200);margin-bottom:24px;">
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;">
-          <i class="bi bi-book-half"></i>
-        </div>
-        <h3 style="margin:0;font-family:Outfit,sans-serif;font-weight:800;">EduManage <span style="color:var(--primary);">Pro</span></h3>
+        @if(!empty($siteSettings['site_logo']))
+          <img src="{{ asset($siteSettings['site_logo']) }}" alt="{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}" style="max-height:48px;max-width:200px;object-fit:contain;">
+        @else
+          <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;">
+            <i class="bi bi-book-half"></i>
+          </div>
+          <h3 style="margin:0;font-family:Outfit,sans-serif;font-weight:800;">{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}</h3>
+        @endif
       </div>
       <p style="margin:0;font-size:0.82rem;color:var(--gray-500);line-height:1.4;">
         Bangladesh's Smart Coaching Management Platform<br>

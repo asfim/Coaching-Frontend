@@ -5,6 +5,9 @@
 <title>@yield('title', 'EduManage Pro - Smart Coaching Management System Bangladesh')</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
 <link rel="stylesheet" href="{{ asset('css/style.css') }}"/>
+@if(!empty($siteSettings['site_favicon']))
+<link rel="icon" href="{{ asset($siteSettings['site_favicon']) }}"/>
+@endif
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 .container{max-width:1320px;margin:0 auto;padding:0 24px;}
@@ -20,8 +23,12 @@
 <header class="pub-navbar">
   <div class="container" style="display:flex;align-items:center;height:70px;gap:20px;">
     <a href="{{ route('home') }}" class="logo">
-      <div class="logo-icon"><i class="bi bi-book-half"></i></div>
-      <div><h6 style="font-family:Outfit,sans-serif;">EduManage <span style="color:var(--primary)">Pro</span></h6><span>Coaching Management</span></div>
+      @if(!empty($siteSettings['site_logo']))
+        <img src="{{ asset($siteSettings['site_logo']) }}" alt="{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}" style="max-height:45px;max-width:210px;object-fit:contain;">
+      @else
+        <div class="logo-icon"><i class="bi bi-book-half"></i></div>
+        <div><h6 style="font-family:Outfit,sans-serif;">{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}</h6><span>{{ $siteSettings['institute_tagline'] ?? 'Coaching Management' }}</span></div>
+      @endif
     </a>
     <nav class="pub-nav-links" id="pubNavLinks">
       <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
@@ -61,9 +68,15 @@
 <footer class="site-footer">
   <div class="container" style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:40px;">
     <div class="footer-brand">
-      <div class="logo-icon"><i class="bi bi-book-half"></i></div>
-      <h4>EduManage <span style="color:var(--primary)">Pro</span></h4>
-      <p>Bangladesh's comprehensive coaching management system.</p>
+      @if(!empty($siteSettings['site_logo']))
+        <div style="margin-bottom:12px;">
+          <img src="{{ asset($siteSettings['site_logo']) }}" alt="{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}" style="max-height:45px;max-width:210px;object-fit:contain;filter:brightness(0) invert(1);">
+        </div>
+      @else
+        <div class="logo-icon"><i class="bi bi-book-half"></i></div>
+        <h4>{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}</h4>
+      @endif
+      <p>{{ $siteSettings['institute_tagline'] ?? "Bangladesh's comprehensive coaching management system." }}</p>
       <div class="social-links">
         <a class="social-link" href="#"><i class="bi bi-facebook"></i></a>
         <a class="social-link" href="#"><i class="bi bi-twitter-x"></i></a>

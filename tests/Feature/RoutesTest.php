@@ -1288,4 +1288,73 @@ class RoutesTest extends TestCase
         $respAccounts->assertSee('Total Income:');
         $respAccounts->assertSee('Net Balance:');
     }
+
+    public function test_settings_logo_and_favicon_upload_and_removal(): void
+    {
+        Storage::fake('public');
+
+        // 1. Visit settings page as Admin
+        $resp = $this->actingAs($this->adminUser)->get(route('admin.settings'));
+        $resp->assertStatus(200);
+        $resp->assertSee('Branding, Logo &amp; Favicon', false);
+        $resp->assertSee('name="site_logo"', false);
+        $resp->assertSee('name="site_favicon"', false);
+        $resp->assertSee('enctype="multipart/form-data"', false);
+
+        // 2. Upload Logo & Favicon
+        $fakeLogo = UploadedFile::fake()->image('test_logo.png', 240, 60);
+        $fakeFavicon = UploadedFile::fake()->image('test_favicon.png', 32, 32);
+
+        $updateResp = $this->actingAs($this->adminUser)->post(route('admin.settings.update'), [
+            'coaching_name' => 'EduManage Brand Test',
+            'email' => 'brand@edumanage.com',
+            'phone' => '+880 1800-000000',
+            'address' => 'Dhaka, Bangladesh',
+            'site_logo' => $fakeLogo,
+            'site_favicon' => $fakeFavicon,
+        ]);
+        $updateResp->assertRedirect(route('admin.settings'));
+        $updateResp->assertSessionHas('success');
+
+        $storedLogo = \App\Models\Setting::get('site_logo');
+        $storedFavicon = \App\Models\Setting::get('site_favicon');
+
+        $this->assertNotNull($storedLogo);
+        $this->assertNotNull($storedFavicon);
+        $this->assertStringStartsWith('storage/settings/', $storedLogo);
+        $this->assertStringStartsWith('storage/settings/', $storedFavicon);
+
+        $logoPathOnDisk = str_replace('storage/', '', $storedLogo);
+        $favPathOnDisk = str_replace('storage/', '', $storedFavicon);
+        Storage::disk('public')->assertExists($logoPathOnDisk);
+        Storage::disk('public')->assertExists($favPathOnDisk);
+
+        // 3. Verify public and admin layouts render the logo & favicon
+        $homeResp = $this->get(route('home'));
+        $homeResp->assertStatus(200);
+        $homeResp->assertSee($storedLogo);
+        $homeResp->assertSee($storedFavicon);
+
+        $adminResp = $this->actingAs($this->adminUser)->get(route('admin.dashboard'));
+        $adminResp->assertStatus(200);
+        $adminResp->assertSee($storedLogo);
+        $adminResp->assertSee($storedFavicon);
+
+        // 4. Test Removal of Logo and Favicon
+        $removeResp = $this->actingAs($this->adminUser)->post(route('admin.settings.update'), [
+            'coaching_name' => 'EduManage Brand Test',
+            'email' => 'brand@edumanage.com',
+            'phone' => '+880 1800-000000',
+            'address' => 'Dhaka, Bangladesh',
+            'remove_logo' => '1',
+            'remove_favicon' => '1',
+        ]);
+        $removeResp->assertRedirect(route('admin.settings'));
+        $removeResp->assertSessionHas('success');
+
+        $this->assertNull(\App\Models\Setting::get('site_logo'));
+        $this->assertNull(\App\Models\Setting::get('site_favicon'));
+        Storage::disk('public')->assertMissing($logoPathOnDisk);
+        Storage::disk('public')->assertMissing($favPathOnDisk);
+    }
 }

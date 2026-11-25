@@ -5,6 +5,9 @@
 <title>@yield('title', 'Teacher Portal - EduManage Pro')</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
 <link rel="stylesheet" href="{{ asset('css/style.css') }}"/>
+@if(!empty($siteSettings['site_favicon']))
+<link rel="icon" href="{{ asset($siteSettings['site_favicon']) }}"/>
+@endif
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 .container{max-width:1320px;margin:0 auto;padding:0 24px;}
@@ -23,13 +26,17 @@ body{background:var(--gray-50);}
 <div class="teacher-navbar">
   <div class="teacher-nav-inner">
     <a href="{{ route('home') }}" style="display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;">
-      <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;">
-        <i class="bi bi-person-badge"></i>
-      </div>
-      <div>
-        <strong style="font-size:.95rem;display:block;line-height:1.2;">EduManage Pro</strong>
-        <span style="font-size:.7rem;color:rgba(255,255,255,.8);">Teacher Portal</span>
-      </div>
+      @if(!empty($siteSettings['site_logo']))
+        <img src="{{ asset($siteSettings['site_logo']) }}" alt="{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}" style="max-height:38px;max-width:180px;object-fit:contain;">
+      @else
+        <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <i class="bi bi-person-badge"></i>
+        </div>
+        <div>
+          <strong style="font-size:.95rem;display:block;line-height:1.2;">{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}</strong>
+          <span style="font-size:.7rem;color:rgba(255,255,255,.8);">Teacher Portal</span>
+        </div>
+      @endif
     </a>
     <nav style="display:flex;gap:6px;margin-left:24px;">
       <a href="{{ route('teacher.dashboard') }}" style="color:rgba(255,255,255,.85);padding:6px 12px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;text-decoration:none;{{ request()->routeIs('teacher.dashboard') ? 'background:rgba(255,255,255,.2);color:#fff;' : '' }}">Dashboard</a>

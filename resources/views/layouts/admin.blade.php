@@ -5,6 +5,9 @@
 <title>@yield('title', 'EduManage Pro Admin')</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
 <link rel="stylesheet" href="{{ asset('css/style.css') }}"/>
+@if(!empty($siteSettings['site_favicon']))
+<link rel="icon" href="{{ asset($siteSettings['site_favicon']) }}"/>
+@endif
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 .container{max-width:1320px;margin:0 auto;padding:0 24px;}
@@ -22,8 +25,14 @@ body{overflow-x:hidden;}
 <body>
 <div class="sidebar" id="sidebar" style="position:fixed;left:0;top:0;bottom:0;width:260px;background:#fff;border-right:1px solid var(--border);z-index:100;overflow-y:auto;box-shadow:2px 0 20px rgba(0,0,0,.05);">
   <div class="sidebar-brand">
-    <div class="logo-icon"><i class="bi bi-book-half"></i></div>
-    <div class="brand-text"><h6>EduManage Pro</h6><span>Admin Panel</span></div>
+    @if(!empty($siteSettings['site_logo']))
+      <a href="{{ route('admin.dashboard') }}" style="display:flex;align-items:center;text-decoration:none;padding:4px 0;">
+        <img src="{{ asset($siteSettings['site_logo']) }}" alt="{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}" style="max-height:42px;max-width:190px;object-fit:contain;">
+      </a>
+    @else
+      <div class="logo-icon"><i class="bi bi-book-half"></i></div>
+      <div class="brand-text"><h6>{{ $siteSettings['coaching_name'] ?? 'EduManage Pro' }}</h6><span>Admin Panel</span></div>
+    @endif
   </div>
   <nav class="sidebar-nav">
     <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>

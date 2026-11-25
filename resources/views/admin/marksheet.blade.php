@@ -183,9 +183,13 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid {{ $isTarget ? '#b45309' : '#1e3a8a' }};padding-bottom:18px;margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:16px;">
-        <div style="width:56px;height:56px;background:{{ $isTarget ? '#b45309' : '#1e3a8a' }};color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
-          <i class="bi {{ $isTarget ? 'bi-bullseye' : 'bi-book-half' }}"></i>
-        </div>
+        @if(!empty($siteSettings['site_logo']))
+          <img src="{{ asset($siteSettings['site_logo']) }}" alt="Logo" style="max-height:56px;max-width:160px;object-fit:contain;">
+        @else
+          <div style="width:56px;height:56px;background:{{ $isTarget ? '#b45309' : '#1e3a8a' }};color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
+            <i class="bi {{ $isTarget ? 'bi-bullseye' : 'bi-book-half' }}"></i>
+          </div>
+        @endif
         <div>
           <h2 style="margin:0 0 2px 0;font-weight:900;color:{{ $isTarget ? '#92400e' : '#1e3a8a' }};font-size:1.6rem;letter-spacing:0.5px;">
             {{ $isTarget ? 'EDUMANAGE TARGET BATCH ADMISSION CARE' : 'EDUMANAGE PRO ACADEMIC CARE' }}
