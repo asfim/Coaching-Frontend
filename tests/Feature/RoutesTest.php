@@ -18,6 +18,7 @@ use App\Models\Result;
 use App\Models\Subject;
 use App\Models\ResultItem;
 use App\Models\Fee;
+use App\Models\Routine;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -34,6 +35,8 @@ class RoutesTest extends TestCase
         parent::setUp();
         $this->adminUser = User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
         $this->teacherUser = User::where('role', 'teacher')->first() ?? User::factory()->create(['role' => 'teacher']);
+        $this->teacherUser->permissions = ['attendance', 'routine', 'results', 'exams', 'notices', 'students'];
+        $this->teacherUser->save();
         $this->studentUser = User::where('role', 'student')->first() ?? User::factory()->create(['role' => 'student']);
         $this->parentUser = User::where('role', 'parent')->first() ?? User::factory()->create(['role' => 'parent']);
     }
@@ -1356,5 +1359,172 @@ class RoutesTest extends TestCase
         $this->assertNull(\App\Models\Setting::get('site_favicon'));
         Storage::disk('public')->assertMissing($logoPathOnDisk);
         Storage::disk('public')->assertMissing($favPathOnDisk);
+    }
+
+    public function test_teacher_creation_with_login_and_role_permissions(): void
+    {
+        User::where('email', 'rakib.sir@edumanage.com')->delete();
+        Teacher::where('email', 'rakib.sir@edumanage.com')->delete();
+
+        // 1. Admin creates teacher with login & permissions
+        $resp = $this->actingAs($this->adminUser)->post(route('admin.teachers.store'), [
+            'name' => 'Prof. Rakib Hasan',
+            'email' => 'rakib.sir@edumanage.com',
+            'password' => 'Teacher@2026',
+            'phone' => '01711223344',
+            'designation' => 'Senior Physics Faculty',
+            'subject' => 'Physics',
+            'qualification' => 'M.Sc. Physics (DU)',
+            'salary' => 45000,
+            'status' => 'Active',
+            'permissions' => ['attendance', 'routine'],
+        ]);
+        $resp->assertRedirect(route('admin.teachers'));
+
+        $teacher = Teacher::where('email', 'rakib.sir@edumanage.com')->first();
+        $this->assertNotNull($teacher);
+        $this->assertEquals(['attendance', 'routine'], $teacher->permissions);
+
+        $teacherUser = User::where('email', 'rakib.sir@edumanage.com')->first();
+        $this->assertNotNull($teacherUser);
+        $this->assertEquals('teacher', $teacherUser->role);
+        $this->assertEquals($teacher->id, $teacherUser->teacher_id);
+        $this->assertTrue($teacherUser->hasPermission('attendance'));
+        $this->assertTrue($teacherUser->hasPermission('routine'));
+        $this->assertFalse($teacherUser->hasPermission('results'));
+
+        // 2. Teacher logs in with credentials
+        $loginResp = $this->post(route('login.post'), [
+            'login' => 'rakib.sir@edumanage.com',
+            'password' => 'Teacher@2026',
+        ]);
+        $loginResp->assertRedirect(route('teacher.dashboard'));
+
+        // 3. Teacher can access permitted modules
+        $dashResp = $this->actingAs($teacherUser)->get(route('teacher.dashboard'));
+        $dashResp->assertStatus(200);
+        $dashResp->assertSee('Prof. Rakib Hasan');
+        $dashResp->assertSee('Take Attendance');
+        $dashResp->assertSee('My Schedule');
+
+        $attResp = $this->actingAs($teacherUser)->get(route('teacher.attendance'));
+        $attResp->assertStatus(200);
+
+        $routineResp = $this->actingAs($teacherUser)->get(route('teacher.routine'));
+        $routineResp->assertStatus(200);
+
+        // Clean up
+        $teacherUser->delete();
+        $teacher->delete();
+    }
+
+    public function test_teacher_without_permissions_is_restricted_and_sees_profile_only(): void
+    {
+        User::where('email', 'limited.teacher@edumanage.com')->delete();
+        Teacher::where('email', 'limited.teacher@edumanage.com')->delete();
+
+        // 1. Admin creates teacher with NO permissions
+        $resp = $this->actingAs($this->adminUser)->post(route('admin.teachers.store'), [
+            'name' => 'Limited Instructor',
+            'email' => 'limited.teacher@edumanage.com',
+            'password' => 'Limited@2026',
+            'phone' => '01899887766',
+            'designation' => 'Junior Lecturer',
+            'subject' => 'Biology',
+            'status' => 'Active',
+            'permissions' => [],
+        ]);
+        $resp->assertRedirect(route('admin.teachers'));
+
+        $teacher = Teacher::where('email', 'limited.teacher@edumanage.com')->first();
+        $teacherUser = User::where('email', 'limited.teacher@edumanage.com')->first();
+        $this->assertFalse($teacherUser->hasPermission('attendance'));
+        $this->assertFalse($teacherUser->hasPermission('routine'));
+
+        // 2. Teacher Dashboard shows profile details only
+        $dashResp = $this->actingAs($teacherUser)->get(route('teacher.dashboard'));
+        $dashResp->assertStatus(200);
+        $dashResp->assertSee('Teacher Details &amp; Profile Information', false);
+        $dashResp->assertSee('Limited Instructor');
+        $dashResp->assertSee('Profile Details Only');
+
+        // 3. Unauthorized access to attendance or routine redirects with error
+        $attResp = $this->actingAs($teacherUser)->get(route('teacher.attendance'));
+        $attResp->assertRedirect(route('teacher.dashboard'));
+        $attResp->assertSessionHas('error');
+
+        $routineResp = $this->actingAs($teacherUser)->get(route('teacher.routine'));
+        $routineResp->assertRedirect(route('teacher.dashboard'));
+        $routineResp->assertSessionHas('error');
+
+        // Clean up
+        $teacherUser->delete();
+        $teacher->delete();
+    }
+
+    public function test_student_dashboard_displays_all_necessary_details(): void
+    {
+        $batch = Batch::first();
+        $student = Student::first();
+        $user = User::where('student_id', $student->id)->first() ?? User::factory()->create([
+            'role' => 'student',
+            'student_id' => $student->id,
+            'name' => $student->name,
+            'email' => $student->email,
+        ]);
+
+        $resp = $this->actingAs($user)->get(route('student.dashboard'));
+        $resp->assertStatus(200);
+        $resp->assertSee('Student Details');
+        $resp->assertSee($student->student_id);
+        $resp->assertSee('Academic Results');
+        $resp->assertSee('Attendance Summary');
+        $resp->assertSee('Fee &amp; Due Status', false);
+        $resp->assertSee('Class Schedule');
+    }
+
+    public function test_admin_routine_crud_operations(): void
+    {
+        $batch = Batch::first();
+        $this->assertNotNull($batch);
+
+        // 1. Create Routine slot
+        $storeResp = $this->actingAs($this->adminUser)->post(route('admin.routine.store'), [
+            'batch_id' => $batch->id,
+            'day' => 'Sunday',
+            'subject' => 'Physics Quantum Theory',
+            'teacher_id' => Teacher::first()?->id,
+            'start_time' => '10:00 AM',
+            'end_time' => '11:30 AM',
+            'room' => 'Lab 301',
+        ]);
+        $storeResp->assertRedirect(route('admin.routine', ['batch_id' => $batch->id]));
+
+        $slot = Routine::where('subject', 'Physics Quantum Theory')->first();
+        $this->assertNotNull($slot);
+        $this->assertEquals('Sunday', $slot->day);
+        $this->assertEquals('Lab 301', $slot->room);
+
+        // 2. Update Routine slot
+        $updateResp = $this->actingAs($this->adminUser)->put(route('admin.routine.update', $slot->id), [
+            'batch_id' => $batch->id,
+            'day' => 'Monday',
+            'subject' => 'Advanced Physics Mechanics',
+            'teacher_id' => Teacher::first()?->id,
+            'start_time' => '11:00 AM',
+            'end_time' => '12:30 PM',
+            'room' => 'Room 402',
+        ]);
+        $updateResp->assertRedirect(route('admin.routine', ['batch_id' => $batch->id]));
+
+        $slot->refresh();
+        $this->assertEquals('Monday', $slot->day);
+        $this->assertEquals('Advanced Physics Mechanics', $slot->subject);
+        $this->assertEquals('Room 402', $slot->room);
+
+        // 3. Delete Routine slot
+        $delResp = $this->actingAs($this->adminUser)->delete(route('admin.routine.destroy', $slot->id));
+        $delResp->assertRedirect(route('admin.routine', ['batch_id' => $batch->id]));
+        $this->assertNull(Routine::find($slot->id));
     }
 }

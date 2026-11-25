@@ -40,8 +40,12 @@ body{background:var(--gray-50);}
     </a>
     <nav style="display:flex;gap:6px;margin-left:24px;">
       <a href="{{ route('teacher.dashboard') }}" style="color:rgba(255,255,255,.85);padding:6px 12px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;text-decoration:none;{{ request()->routeIs('teacher.dashboard') ? 'background:rgba(255,255,255,.2);color:#fff;' : '' }}">Dashboard</a>
-      <a href="{{ route('teacher.routine') }}" style="color:rgba(255,255,255,.85);padding:6px 12px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;text-decoration:none;{{ request()->routeIs('teacher.routine') ? 'background:rgba(255,255,255,.2);color:#fff;' : '' }}">Class Routine</a>
-      <a href="{{ route('teacher.attendance') }}" style="color:rgba(255,255,255,.85);padding:6px 12px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;text-decoration:none;{{ request()->routeIs('teacher.attendance') ? 'background:rgba(255,255,255,.2);color:#fff;' : '' }}">Take Attendance</a>
+      @if(auth()->user()?->hasPermission('routine'))
+        <a href="{{ route('teacher.routine') }}" style="color:rgba(255,255,255,.85);padding:6px 12px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;text-decoration:none;{{ request()->routeIs('teacher.routine') ? 'background:rgba(255,255,255,.2);color:#fff;' : '' }}">Class Routine</a>
+      @endif
+      @if(auth()->user()?->hasPermission('attendance'))
+        <a href="{{ route('teacher.attendance') }}" style="color:rgba(255,255,255,.85);padding:6px 12px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;text-decoration:none;{{ request()->routeIs('teacher.attendance') ? 'background:rgba(255,255,255,.2);color:#fff;' : '' }}">Take Attendance</a>
+      @endif
       <a href="{{ route('notice') }}" style="color:rgba(255,255,255,.85);padding:6px 12px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;text-decoration:none;">Notices</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">

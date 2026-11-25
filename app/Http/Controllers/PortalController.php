@@ -16,23 +16,22 @@ class PortalController extends Controller
     {
         $user = Auth::user();
         $student = ($user && $user->student_id)
-            ? Student::with(['batch', 'course', 'attendances', 'results.exam', 'fees'])->find($user->student_id)
-            : Student::with(['batch', 'course', 'attendances', 'results.exam', 'fees'])->first();
+            ? Student::with(['batch.academicClass', 'course', 'attendances', 'results.exam.subjectModel', 'results.items', 'fees'])->find($user->student_id)
+            : Student::with(['batch.academicClass', 'course', 'attendances', 'results.exam.subjectModel', 'results.items', 'fees'])->first();
 
         $totalAtt = $student?->attendances->count() ?: 0;
         $presentCount = $student?->attendances->where('status', 'present')->count() ?: 0;
         $absentCount = $student?->attendances->where('status', 'absent')->count() ?: 0;
         $lateCount = $student?->attendances->where('status', 'late')->count() ?: 0;
-        $attRate = $totalAtt > 0 ? round(($presentCount / $totalAtt) * 100) : 94;
+        $attRate = $totalAtt > 0 ? round(($presentCount / $totalAtt) * 100) : 100;
 
-        $gpa = $student && $student->results->count() > 0 ? round($student->results->avg('gpa'), 2) : 4.83;
+        $gpa = $student && $student->results->count() > 0 ? round($student->results->avg('gpa'), 2) : 0;
         $nextExam = Exam::where('status', 'Upcoming')->orderBy('date')->first();
         $recentNotices = Notice::where('status', 'published')->latest()->take(3)->get();
         $routines = Routine::with('teacher')
             ->when($student?->batch_id, fn($q) => $q->where('batch_id', $student->batch_id))
-            ->take(4)
             ->get();
-        $recentResult = $student?->results()->with('exam')->latest()->first();
+        $recentResult = $student?->results()->with(['exam.subjectModel', 'items'])->latest()->first();
 
         return view('student.dashboard', compact(
             'student', 'attRate', 'presentCount', 'absentCount', 'lateCount',

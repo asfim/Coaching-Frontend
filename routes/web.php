@@ -123,6 +123,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Routine CRUD
     Route::get('/routine', [RoutineController::class, 'index'])->name('routine');
     Route::post('/routine', [RoutineController::class, 'store'])->name('routine.store');
+    Route::put('/routine/{id}', [RoutineController::class, 'update'])->name('routine.update');
     Route::delete('/routine/{id}', [RoutineController::class, 'destroy'])->name('routine.destroy');
 
     // Fees CRUD

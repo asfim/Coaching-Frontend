@@ -28,6 +28,7 @@ class User extends Authenticatable
         'teacher_id',
         'student_id',
         'status',
+        'permissions',
     ];
 
     /**
@@ -50,6 +51,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'permissions' => 'array',
         ];
     }
 
@@ -81,5 +83,25 @@ class User extends Authenticatable
     public function isParent(): bool
     {
         return $this->role === 'parent';
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if ($this->isTeacher()) {
+            $perms = $this->permissions;
+            if (empty($perms) && $this->teacher) {
+                $perms = $this->teacher->permissions;
+            }
+            if (is_string($perms)) {
+                $perms = json_decode($perms, true) ?: [];
+            }
+            return is_array($perms) && in_array($permission, $perms, true);
+        }
+
+        return false;
     }
 }

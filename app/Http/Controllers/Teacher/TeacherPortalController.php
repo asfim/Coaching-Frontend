@@ -33,6 +33,10 @@ class TeacherPortalController extends Controller
     public function routine()
     {
         $user = Auth::user();
+        if ($user && !$user->hasPermission('routine')) {
+            return redirect()->route('teacher.dashboard')->with('error', 'You do not have permission to access routine timetable. Please contact admin.');
+        }
+
         $teacher = $user?->teacher ?? Teacher::first();
 
         $routines = Routine::with('batch')
@@ -45,6 +49,11 @@ class TeacherPortalController extends Controller
 
     public function attendance(Request $request)
     {
+        $user = Auth::user();
+        if ($user && !$user->hasPermission('attendance')) {
+            return redirect()->route('teacher.dashboard')->with('error', 'You do not have permission to take attendance. Please contact admin.');
+        }
+
         $batches = Batch::all();
         $selectedBatch = $request->batch_id ?? $batches->first()?->id;
         $date = $request->date ?? now()->toDateString();

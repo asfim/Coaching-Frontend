@@ -86,30 +86,41 @@
       </div>
     </div>
 
-    <!-- Recent Results -->
+    <!-- Academic Results -->
     <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
-      <h5 style="font-weight:700;margin-bottom:16px;"><i class="bi bi-award" style="color:var(--success);"></i> Academic Results</h5>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h5 style="font-weight:700;margin:0;"><i class="bi bi-award" style="color:var(--success);"></i> Academic Results &amp; Marks</h5>
+        <span class="badge badge-primary">{{ count($student?->results ?? []) }} Exams</span>
+      </div>
       <div class="table-responsive">
         <table class="table" style="font-size:.85rem;">
           <thead>
             <tr>
-              <th>Exam Name</th>
+              <th>Exam Title</th>
+              <th>Subject</th>
               <th>Marks</th>
-              <th>Grade</th>
               <th>GPA</th>
+              <th>Grade</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             @forelse($student?->results ?? [] as $res)
             <tr>
-              <td><strong>{{ $res->exam?->name ?? 'Semester Test' }}</strong></td>
-              <td>{{ $res->marks_obtained }} / {{ $res->total_marks }}</td>
+              <td><strong>{{ $res->exam?->title ?? 'Exam' }}</strong></td>
+              <td>{{ $res->exam?->subjectModel?->name ?: ($res->exam?->subject ?: '-') }}</td>
+              <td><strong>{{ $res->obtained_marks }}</strong> / {{ $res->total_marks }}</td>
+              <td><strong style="color:var(--primary);">{{ number_format($res->gpa, 2) }}</strong></td>
               <td><span class="badge badge-success">{{ $res->grade }}</span></td>
-              <td><strong style="color:var(--primary);">{{ $res->gpa }}</strong></td>
+              <td>
+                <a href="{{ route('admin.results.marksheet', $res->id) }}" class="btn btn-outline btn-sm" target="_blank" style="padding:2px 8px;font-size:0.75rem;">
+                  <i class="bi bi-file-earmark-pdf"></i> Marksheet
+                </a>
+              </td>
             </tr>
             @empty
             <tr>
-              <td colspan="4" style="text-align:center;color:var(--gray-500);">No results published yet.</td>
+              <td colspan="6" style="text-align:center;color:var(--gray-500);padding:20px;">No exam results published yet.</td>
             </tr>
             @endforelse
           </tbody>
@@ -120,6 +131,39 @@
 
   <!-- Sidebar widgets -->
   <div style="display:flex;flex-direction:column;gap:16px;">
+    <!-- Student Profile Details Card -->
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
+      <h5 style="font-weight:700;margin-bottom:14px;"><i class="bi bi-person-vcard" style="color:var(--primary);"></i> Student Details</h5>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:0.83rem;">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100);">
+          <span style="color:var(--gray-500);">Student ID:</span>
+          <strong>{{ $student?->student_id ?? '-' }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100);">
+          <span style="color:var(--gray-500);">Class:</span>
+          <strong>{{ $student?->class_name ?? '-' }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100);">
+          <span style="color:var(--gray-500);">Program:</span>
+          <span class="badge {{ ($student?->program_type ?? 'Academic') === 'Target' ? 'badge-warning' : 'badge-primary' }}">
+            {{ $student?->program_type ?? 'Academic' }}
+          </span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100);">
+          <span style="color:var(--gray-500);">Batch:</span>
+          <strong>{{ $student?->batch?->name ?? 'Default Batch' }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100);">
+          <span style="color:var(--gray-500);">Phone:</span>
+          <span>{{ $student?->phone ?: '-' }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span style="color:var(--gray-500);">Guardian Phone:</span>
+          <span>{{ $student?->guardian_phone ?: '-' }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Attendance Doughnut -->
     <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
       <h5 style="font-weight:700;margin-bottom:14px;">Attendance Summary</h5>
@@ -131,12 +175,36 @@
       </div>
     </div>
 
+    <!-- Fee Summary -->
+    @php
+      $totFee = $student?->fees->sum('amount') ?: 0;
+      $totPaid = $student?->fees->sum('paid_amount') ?: 0;
+      $totDue = $student?->fees->sum('due_amount') ?: 0;
+    @endphp
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
+      <h5 style="font-weight:700;margin-bottom:12px;"><i class="bi bi-wallet2" style="color:#059669;"></i> Fee &amp; Due Status</h5>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:0.83rem;">
+        <div style="display:flex;justify-content:space-between;padding:6px 8px;background:#f8fafc;border-radius:6px;">
+          <span style="color:var(--gray-600);">Total Billed:</span>
+          <strong>৳{{ number_format($totFee, 2) }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 8px;background:#ecfdf5;border-radius:6px;">
+          <span style="color:#047857;">Total Paid:</span>
+          <strong style="color:#047857;">৳{{ number_format($totPaid, 2) }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 8px;background:#fef2f2;border-radius:6px;">
+          <span style="color:#b91c1c;">Outstanding Due:</span>
+          <strong style="color:#b91c1c;">৳{{ number_format($totDue, 2) }}</strong>
+        </div>
+      </div>
+    </div>
+
     <!-- Next Exam -->
     <div style="background:linear-gradient(135deg,var(--warning),#b45309);border-radius:var(--radius-lg);padding:20px;color:#fff;">
       <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.8);margin-bottom:8px;">
         <i class="bi bi-alarm"></i> Next Exam
       </div>
-      <h4 style="color:#fff;margin-bottom:4px;">{{ $nextExam?->name ?? 'SSC Model Test' }}</h4>
+      <h4 style="color:#fff;margin-bottom:4px;">{{ $nextExam?->title ?? 'Model Test' }}</h4>
       <p style="font-size:.85rem;color:rgba(255,255,255,.8);margin-bottom:16px;">
         {{ $nextExam ? \Carbon\Carbon::parse($nextExam->date)->format('F d, Y') : 'Date to be announced' }}
       </p>
